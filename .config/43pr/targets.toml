@@ -5,6 +5,9 @@
 input  = "~/.config/43pr/templates/kitty.conf"
 output = "~/.config/kitty/matugen.conf"
 reload = ["pkill", "-USR1", "-x", "kitty"]
+[foot]
+input  = "~/.config/43pr/templates/foot.ini"
+output = "~/.config/foot/colors.ini"
 [rofi]
 input  = "~/.config/43pr/templates/rofi-colors.rasi"
 output = "~/.config/rofi/colors.rasi"
