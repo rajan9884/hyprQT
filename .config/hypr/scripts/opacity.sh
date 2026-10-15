@@ -25,4 +25,20 @@ qs kill >/dev/null 2>&1
 pkill -x quickshell 2>/dev/null
 pkill -x qs 2>/dev/null
 sleep 0.3
+# The bar ignores Theme.bgAlpha and uses its own bgOpacity from
+# bar-state.json — keep it in sync (quickshell is dead at this point,
+# so no save-race; it picks the file up on start).
+OPACITY_VAL="$opacity" python3 - <<'EOF'
+import json, os
+path = os.path.expanduser("~/.config/quickshell/state/bar-state.json")
+os.makedirs(os.path.dirname(path), exist_ok=True)
+try:
+    with open(path) as f:
+        data = json.load(f)
+except (FileNotFoundError, ValueError):
+    data = {}
+data["bgOpacity"] = float(os.environ["OPACITY_VAL"])
+with open(path, "w") as f:
+    json.dump(data, f, indent=2)
+EOF
 QSG_RENDER_LOOP=basic qs -d
