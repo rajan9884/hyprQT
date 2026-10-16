@@ -15,8 +15,8 @@ local home = os.getenv("HOME")
 hl.on("hyprland.start", function()
     -- hl.exec_cmd("dunst") replaced with quickshell 
     hl.exec_cmd("nm-applet")
-    hl.exec_cmd("wl-paste --type text --watch cliphist store")
-    hl.exec_cmd("wl-paste --type image --watch cliphist store")
+    -- Clipboard capture is owned by the quickshell clipboard plugin
+    -- (wl-paste --watch clipboard.py); no cliphist watchers here.
     hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
     hl.exec_cmd(home .. "/.config/hypr/scripts/portal-warmup.sh")
     hl.exec_cmd(home .. "/.local/bin/power-profiles watch")

@@ -33,6 +33,12 @@ path_for_web_app() {
   done
 }
 
+if [[ ${1:-} == "--list" ]]; then
+  # Machine-readable inventory for the Quickshell webapps plugin.
+  printf '%s\n' "${WEB_APPS[@]}"
+  exit 0
+fi
+
 if (( $# == 0 )); then
   if ((${#WEB_APPS[@]})); then
     mapfile -t SORTED_WEB_APPS < <(printf '%s\n' "${WEB_APPS[@]}" | sort)

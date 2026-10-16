@@ -148,8 +148,8 @@ end, { description = "Toggle single-window square aspect" })
 hl.bind(mainMod .. " + ALT + R", hl.dsp.exec_cmd(scripts .. "/random-wall.sh"), { description = "Random wallpaper" })
 
 -- ── Webapps ──
-hl.bind(mainMod .. " + ALT + SHIFT + W", hl.dsp.exec_cmd(bin .. "/webapp-install-prompt"), { description = "Install web app" })
-hl.bind(mainMod .. " + ALT + SHIFT + X", hl.dsp.exec_cmd(bin .. "/webapp-remove-prompt"), { description = "Remove web app" })
+hl.bind(mainMod .. " + ALT + SHIFT + W", hl.dsp.exec_cmd("qs ipc call webapps install"), { description = "Install web app" })
+hl.bind(mainMod .. " + ALT + SHIFT + X", hl.dsp.exec_cmd("qs ipc call webapps remove"), { description = "Remove web app" })
 
 -- ── Resize family: fine (±25) / normal (±100) / coarse (±300) ──
 hl.bind(mainMod .. " + minus", hl.dsp.window.resize({ x = -100, y = 0, relative = true }), { repeating = true, description = "Resize window" })
@@ -235,7 +235,7 @@ hl.bind(mainMod .. " + CTRL + Q", hl.dsp.exec_cmd(bin .. "/calc-prompt"), { desc
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs ipc call emoji toggle"), { description = "Emoji picker" })
 hl.bind(mainMod .. " + CTRL + E", hl.dsp.exec_cmd("qs ipc call emoji toggle"), { description = "Emoji picker" })
 hl.bind("SUPER + CTRL + V", hl.dsp.exec_cmd("qs ipc call clipboard toggle"), { description = "Clipboard history" })
-hl.bind("SUPER + CTRL + SHIFT + V", hl.dsp.exec_cmd("cliphist wipe"), { description = "Wipe clipboard history" })
+hl.bind("SUPER + CTRL + SHIFT + V", hl.dsp.exec_cmd("qs ipc call clipboard wipe"), { description = "Wipe clipboard history" })
 
 -- ── Screenshots ──
 hl.bind("Print", hl.dsp.exec_cmd(bin .. "/capture-region"), { description = "Screenshot region" })

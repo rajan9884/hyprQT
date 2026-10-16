@@ -1,4 +1,6 @@
 import Quickshell
+import "plugins/clipboard" as ClipboardPlugin
+import "plugins/webapps" as WebappsPlugin
 
 ShellRoot {
     VolumeOsd {}
@@ -11,7 +13,8 @@ ShellRoot {
     Notifications {}
     PowerMenu {}
     Launcher {}
-    Clipboard {}
+    ClipboardPlugin.Clipboard {}
+    WebappsPlugin.Webapps {}
     Emoji {}
     Cheatsheet {}
     Bar {}

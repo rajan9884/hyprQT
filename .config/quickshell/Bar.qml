@@ -676,7 +676,8 @@ Scope {
                     delegate: Rectangle {
                         id: dot
                         required property var modelData
-                        readonly property bool occupied: modelData.toplevels.count > 0
+                        // UntypedObjectModel: size via .values.length (.count does not exist).
+                        readonly property bool occupied: modelData.toplevels.values.length > 0
                         visible: modelData.id > 0
                         Layout.alignment: Qt.AlignCenter
                         implicitWidth: modelData.focused ? 12 : 10

@@ -10,7 +10,7 @@ DIR="${1:-next}"
 command -v hyprctl >/dev/null || exit 0
 command -v jq >/dev/null || exit 0
 
-OCCUPIED=$(hyprctl workspaces -j 2>/dev/null | jq -r '[.[] | select(.windows > 0) | .id] | sort | .[]' 2>/dev/null || true)
+OCCUPIED=$(hyprctl workspaces -j 2>/dev/null | jq -r '[.[] | select(.windows > 0 and .id > 0) | .id] | sort | .[]' 2>/dev/null || true)
 [[ -z "$OCCUPIED" ]] && exit 0
 
 mapfile -t IDS <<<"$OCCUPIED"
