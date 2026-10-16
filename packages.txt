@@ -1,4 +1,4 @@
-# 43PR/dotfiles
+# hyprQT/dotfiles
 # Install e.g.: sudo pacman -S cava
 # Remove e.g.: sudo pacman -R cava
 #
@@ -58,8 +58,8 @@ playerctl
 # Clipboard
 # --------------------------------------------------
 
-cliphist
 wl-clipboard
+wtype
 
 # --------------------------------------------------
 # Terminal / Shell

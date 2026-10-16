@@ -439,7 +439,7 @@ fi
 
 printf '\n'
 printf '\033[1;32m========================================\033[0m\n'
-printf '\033[1;32m       43PR Hyprland Setup Ready       \033[0m\n'
+printf '\033[1;32m       hyprQT Hyprland Setup Ready       \033[0m\n'
 printf '\033[1;32m========================================\033[0m\n'
 printf '\n'
 
