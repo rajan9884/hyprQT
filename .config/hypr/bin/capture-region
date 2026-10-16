@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Region screenshot — silent capture: copies to clipboard AND saves a PNG file.
+# Region screenshot — notifies via sidebar (quickshell Notifications).
 # Used by the bare `Print` key (grim + slurp required).
 set -euo pipefail
 
@@ -12,4 +12,3 @@ grim -g "$AREA" "$FILE" 2>/dev/null || exit 0
 wl-copy < "$FILE" 2>/dev/null
 
 notify-send -t 4000 "Screenshot saved" "$FILE"
-qs ipc call screenshot notify "$FILE" 2>/dev/null || true

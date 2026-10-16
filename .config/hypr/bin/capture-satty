@@ -12,4 +12,3 @@ AREA=$(slurp 2>/dev/null) || exit 0
 grim -g "$AREA" - 2>/dev/null | satty --filename - --output-filename "$FILE" --copy-command wl-copy
 
 notify-send -t 4000 "Screenshot saved" "$FILE"
-qs ipc call screenshot notify "$FILE" 2>/dev/null || true

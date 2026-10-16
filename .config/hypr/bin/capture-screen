@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Full-screen screenshot — silent capture: copies to clipboard AND saves a PNG file.
+# Full-screen screenshot — notifies via sidebar (quickshell Notifications).
 # Used by `SUPER + SHIFT + Print` (grim required).
 set -euo pipefail
 
@@ -11,4 +11,3 @@ grim "$FILE" 2>/dev/null || exit 0
 wl-copy < "$FILE" 2>/dev/null
 
 notify-send -t 4000 "Screenshot saved" "$FILE"
-qs ipc call screenshot notify "$FILE" 2>/dev/null || true

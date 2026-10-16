@@ -4,39 +4,48 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import QtQuick.Effects
 
-// Theme carousel — replaces SettingsPages/ThemesPage.
+// Theme picker — same fullscreen cover-flow design as hyprquickpaper.
 // Shortcut: Super+Ctrl+Shift+Space -> qs ipc call themes toggle
-// Keys: H/Left + L/Right navigate, Enter/Space apply, 1-9/0 quick-apply,
-//       C colorgen toggle, M dark/light toggle, Esc/Q close.
+// Keys: H/Left + L/Right navigate, Enter/Space apply + close (like the
+// wallpaper picker), 1-9/0 quick-apply + close, C colorgen, M dark/light
+// (toggles stay open for previewing), Esc/Q/W close. The whole system
+// picks up the new theme instantly via Theme.qml watching
+// ~/.cache/43pr/quickshell-theme.json.
 Scope {
     id: root
     property bool showing: false
     property bool mounted: false
     property var targetScreen: Quickshell.screens[0]
-    property int selected: 0
     property bool colorGen: true
     property bool darkMode: true
+    property string currentPreset: ""
+
+    readonly property string thumbPath: Quickshell.env("HOME") + "/.cache/43pr/theme-thumbs/"
+    readonly property real ui: (Quickshell.screens[0]?.height ?? 1080) / 1080
+    readonly property int animDuration: 220
+    readonly property int visibleTiles: 7
 
     readonly property var themes: [
-        { label: "DEFAULT", command: "default" },
-        { label: "WHITE", command: "preset white" },
-        { label: "METAL", command: "preset metal" },
-        { label: "SLATE", command: "preset slate" },
-        { label: "LIGHT GRAY", command: "preset light-gray" },
-        { label: "BEIGE", command: "preset beige" },
-        { label: "SILVER", command: "preset silver" },
-        { label: "GOLD", command: "preset gold" },
-        { label: "NORD", command: "preset nord" },
-        { label: "TOKYO NIGHT", command: "preset tokyo-night" },
-        { label: "CATPPUCCIN MOCHA", command: "preset catppuccin-mocha" },
-        { label: "EVERFOREST DARK", command: "preset everforest-dark" },
-        { label: "DRACULA", command: "preset dracula" },
-        { label: "ONE DARK", command: "preset one-dark" },
-        { label: "KANAGAWA", command: "preset kanagawa" },
-        { label: "ROSE PINE", command: "preset rose-pine" },
-        { label: "RED", command: "preset red" },
-        { label: "MATRIX", command: "preset matrix" }
+        { label: "DEFAULT", command: "default", preset: "default" },
+        { label: "WHITE", command: "preset white", preset: "white" },
+        { label: "METAL", command: "preset metal", preset: "metal" },
+        { label: "SLATE", command: "preset slate", preset: "slate" },
+        { label: "LIGHT GRAY", command: "preset light-gray", preset: "light-gray" },
+        { label: "BEIGE", command: "preset beige", preset: "beige" },
+        { label: "SILVER", command: "preset silver", preset: "silver" },
+        { label: "GOLD", command: "preset gold", preset: "gold" },
+        { label: "NORD", command: "preset nord", preset: "nord" },
+        { label: "TOKYO NIGHT", command: "preset tokyo-night", preset: "tokyo-night" },
+        { label: "CATPPUCCIN MOCHA", command: "preset catppuccin-mocha", preset: "catppuccin-mocha" },
+        { label: "EVERFOREST DARK", command: "preset everforest-dark", preset: "everforest-dark" },
+        { label: "DRACULA", command: "preset dracula", preset: "dracula" },
+        { label: "ONE DARK", command: "preset one-dark", preset: "one-dark" },
+        { label: "KANAGAWA", command: "preset kanagawa", preset: "kanagawa" },
+        { label: "ROSE PINE", command: "preset rose-pine", preset: "rose-pine" },
+        { label: "RED", command: "preset red", preset: "red" },
+        { label: "MATRIX", command: "preset matrix", preset: "matrix" }
     ]
 
     function runTheme(cmd) {
@@ -57,8 +66,10 @@ Scope {
         runTheme(themes[i].command)
     }
     function move(d) {
+        // Kept for IPC compat; the strip drives currentIndex natively.
+        if (!strip) return
         var n = themes.length
-        root.selected = (root.selected + d + n) % n
+        strip.currentIndex = (strip.currentIndex + d + n) % n
     }
 
     FileView {
@@ -71,12 +82,15 @@ Scope {
             try {
                 root.colorGen = stateAdapter.colorgen
                 root.darkMode = stateAdapter.mode_appearance !== "light"
+                if (typeof stateAdapter.preset === "string" && stateAdapter.preset !== "")
+                    root.currentPreset = stateAdapter.preset
             } catch (e) {}
         }
         adapter: JsonAdapter {
             id: stateAdapter
             property bool colorgen: true
             property string mode_appearance: "dark"
+            property string preset: ""
         }
     }
     Timer { id: reloadTimer; interval: 700; onTriggered: stateView.reload() }
@@ -93,7 +107,6 @@ Scope {
             var scr = Quickshell.screens.find(function (s) { return s.name === mon.name })
             if (scr) root.targetScreen = scr
         }
-        root.selected = 0
         root.showing = true
     }
     function closeMenu() { root.showing = false }
@@ -106,10 +119,11 @@ Scope {
         function hide(): void { root.closeMenu() }
         function next(): void { root.move(1) }
         function prev(): void { root.move(-1) }
-        function applyIndex(i: int): void { root.apply(i) }
+        function applyIndex(i: int): void { root.apply(i); root.closeMenu() }
     }
 
     LazyLoader {
+        id: loader
         active: root.mounted
         PanelWindow {
             id: win
@@ -121,115 +135,299 @@ Scope {
             WlrLayershell.namespace: "themes"
             WlrLayershell.keyboardFocus: root.showing ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
             mask: Region { item: root.showing ? bar : null }
-            Component.onCompleted: bar.forceActiveFocus()
+            Component.onCompleted: {
+                strip.forceActiveFocus()
+                Quickshell.execDetached(["python3",
+                    Quickshell.env("HOME") + "/.config/43pr/bin/theme-thumbs.py"])
+            }
 
-            MouseArea { anchors.fill: parent; onClicked: root.closeMenu() }
-
+            // Dark veil so thumbnails don't blend into the desktop.
             Rectangle {
+                anchors.fill: parent
+                color: "#b3000000"
+                z: 0
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                z: 0
+                onClicked: root.closeMenu()
+            }
+
+            Item {
                 id: bar
-                width: Math.min(900, parent.width - 60)
-                height: 190
-                anchors.centerIn: parent
-                radius: Theme.radius
-                color: Theme.bg
-                border.width: 1
-                border.color: Theme.accent
-                focus: true
-                Keys.onPressed: function (event) {
-                    var k = event.key
-                    if (k === Qt.Key_Escape || k === Qt.Key_Q) { root.closeMenu(); event.accepted = true }
-                    else if (k === Qt.Key_Left || k === Qt.Key_H) { root.move(-1); event.accepted = true }
-                    else if (k === Qt.Key_Right || k === Qt.Key_L) { root.move(1); event.accepted = true }
-                    else if (k === Qt.Key_Return || k === Qt.Key_Space) { root.apply(root.selected); event.accepted = true }
-                    else if (k === Qt.Key_C) { root.setColorGen(!root.colorGen); event.accepted = true }
-                    else if (k === Qt.Key_M) { root.toggleMode(); event.accepted = true }
-                    else if (k >= Qt.Key_1 && k <= Qt.Key_9) { root.apply(k - Qt.Key_1); event.accepted = true }
-                    else if (k === Qt.Key_0) { root.apply(9); event.accepted = true }
+                anchors.fill: parent
+                z: 1
+                visible: root.showing
+
+                property real tileHeight: 500 * root.ui
+                property real tileWidth: (1920 / Math.max(1, root.visibleTiles) - 10) * root.ui
+                property real viewportCenterX: width / 2
+                property real falloffRadius: 960 * root.ui
+                property real sideMargin: Math.max(0, viewportCenterX - tileWidth / 2)
+
+                // Status pill: colorgen + appearance, mirrors the old header.
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.topMargin: 48 * root.ui
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: statusLabel.implicitWidth + 36 * root.ui
+                    height: statusLabel.implicitHeight + 18 * root.ui
+                    radius: height / 2
+                    color: "#cc000000"
+                    border.width: 1
+                    border.color: Theme.accent
+
+                    Text {
+                        id: statusLabel
+                        anchors.centerIn: parent
+                        text: "THEMES  ·  " + (root.colorGen ? "COLORGEN ON" : "COLORGEN OFF")
+                              + "  ·  " + (root.darkMode ? "DARK" : "LIGHT")
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 13 * root.ui
+                        font.bold: true
+                        font.letterSpacing: 2
+                    }
                 }
 
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 10
-                    Row {
-                        width: parent.width
-                        Text {
-                            width: parent.width - 40
-                            text: "THEMES  ·  " + (root.colorGen ? "COLORGEN ON" : "COLORGEN OFF") + "  ·  " + (root.darkMode ? "DARK" : "LIGHT")
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 13
-                            font.bold: true
-                            font.letterSpacing: 2
-                            elide: Text.ElideRight
+                ListView {
+                    id: strip
+                    width: parent.width
+                    height: bar.tileHeight
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                    focus: true
+                    model: root.themes
+                    orientation: ListView.Horizontal
+                    spacing: 0
+                    clip: true
+                    cacheBuffer: 400 * root.ui
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    // The view itself keeps the current tile centered:
+                    // selection and view can never disagree.
+                    highlightRangeMode: ListView.StrictlyEnforceRange
+                    preferredHighlightBegin: width / 2 - bar.tileWidth / 2
+                    preferredHighlightEnd: width / 2 - bar.tileWidth / 2
+                    highlightMoveDuration: root.animDuration
+
+                    leftMargin: bar.sideMargin
+                    rightMargin: bar.sideMargin
+
+                    function clampIndex(i) { return Math.max(0, Math.min(i, count - 1)) }
+
+                    function indexOfCurrent() {
+                        if (root.currentPreset !== "") {
+                            for (let i = 0; i < count; i++) {
+                                if (root.themes[i].preset === root.currentPreset) return i
+                            }
                         }
-                        Text {
-                            text: "×"
-                            color: Theme.textDim
-                            font.pixelSize: 18
-                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.closeMenu() }
+                        return 0
+                    }
+
+                    function centerOnStart() {
+                        if (count <= 0) return
+                        currentIndex = indexOfCurrent()
+                    }
+
+                    function activateCurrent() {
+                        if (count <= 0) return
+                        // Close like the wallpaper picker: an explicit apply
+                        // is a choice, not a preview. C/M toggles stay open.
+                        root.apply(currentIndex)
+                        root.closeMenu()
+                    }
+
+                    function quickApply(i) {
+                        if (count <= 0) return
+                        root.apply(clampIndex(i))
+                        root.closeMenu()
+                    }
+
+                    onCountChanged: centerOnStart()
+                    Component.onCompleted: centerOnStart()
+                    Connections {
+                        target: root
+                        function onShowingChanged() {
+                            if (root.showing) {
+                                strip.centerOnStart()
+                                strip.forceActiveFocus()
+                            }
                         }
                     }
-                    ListView {
-                        id: strip
-                        width: parent.width
-                        height: 84
-                        orientation: ListView.Horizontal
-                        model: root.themes
-                        spacing: 8
-                        clip: true
-                        currentIndex: root.selected
-                        highlightMoveDuration: 120
-                        onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Center)
-                        Component.onCompleted: positionViewAtBeginning()
-                        Connections { target: root; function onSelectedChanged() { strip.currentIndex = root.selected; strip.positionViewAtIndex(root.selected, ListView.Center) } }
-                        delegate: Rectangle {
-                            required property var modelData
-                            required property int index
-                            width: 150
-                            height: 84
-                            radius: Theme.radius
-                            color: index === root.selected ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.22) : "transparent"
-                            border.width: 1
-                            border.color: index === root.selected ? Theme.accent : Theme.border
-                            Column {
+
+                    delegate: Item {
+                        id: delegateItem
+                        width: bar.tileWidth
+                        height: bar.tileHeight
+
+                        required property var modelData
+                        required property int index
+                        property bool active: index === strip.currentIndex
+                        readonly property real baseWidth: bar.tileWidth
+                        readonly property real baseCenterX: x - strip.contentX + baseWidth / 2
+                        readonly property real distance: Math.abs(baseCenterX - bar.viewportCenterX)
+                        readonly property real fraction: Math.min(1, distance / bar.falloffRadius)
+                        readonly property real compression: { const t = fraction; return t * t * t * t }
+                        readonly property real edgeOffset: {
+                            const amount = 80 * root.ui * compression
+                            return baseCenterX < bar.viewportCenterX ? amount : -amount
+                        }
+                        readonly property real scaleFactor: {
+                            const t = 1 - fraction * fraction * (3 - 2 * fraction)
+                            return 0.3 + (0.8 - 0.3) * t
+                        }
+
+                        Item {
+                            id: content
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: delegateItem.baseWidth * delegateItem.scaleFactor
+                            height: delegateItem.height * Math.min(1, delegateItem.scaleFactor)
+                            x: (delegateItem.baseWidth - width) / 2 + delegateItem.edgeOffset
+
+                            Image {
+                                id: shadowImage
+                                x: 6 * root.ui
+                                y: 6 * root.ui
+                                width: parent.width
+                                height: parent.height
+                                source: img.source
+                                sourceSize.width: img.sourceSize.width
+                                sourceSize.height: img.sourceSize.height
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                cache: true
+                                smooth: true
+                                visible: delegateItem.active
+                                opacity: 0.4
+                                layer.enabled: true
+                                layer.effect: MultiEffect { brightness: -1; blurEnabled: true; blur: 0.45 }
+                            }
+
+                            // Cheap static shadow for side tiles.
+                            Rectangle {
+                                x: 6 * root.ui
+                                y: 6 * root.ui
+                                width: parent.width
+                                height: parent.height
+                                radius: Math.min(width, height) * 0.04
+                                color: "#000000"
+                                opacity: !delegateItem.active ? 0.28 : 0
+                                visible: opacity > 0
+                            }
+
+                            Text {
+                                id: alt
+                                text: ""
+                                color: "#ffffff"
                                 anchors.centerIn: parent
-                                spacing: 4
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: (index + 1 > 10) ? "·" : (index + 1) + ""
-                                    color: Theme.textFaint
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 9
+                                font.pixelSize: 16 * root.ui
+                            }
+
+                            Image {
+                                id: img
+                                anchors.fill: parent
+                                opacity: delegateItem.active ? 0.95 : 0.45
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                cache: true
+                                smooth: true
+                                source: "file://" + root.thumbPath + delegateItem.modelData.preset + ".png"
+                                sourceSize.width: delegateItem.baseWidth * 0.8
+                                sourceSize.height: delegateItem.height
+                                Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                                Timer {
+                                    id: retryTimer
+                                    interval: 1000
+                                    repeat: false
+                                    onTriggered: { const s = img.source; img.source = ""; img.source = s }
                                 }
-                                Text {
-                                    width: 134
-                                    horizontalAlignment: Text.AlignHCenter
-                                    wrapMode: Text.WordWrap
-                                    maximumLineCount: 2
-                                    elide: Text.ElideRight
-                                    text: modelData.label
-                                    color: index === root.selected ? Theme.text : Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 11
-                                    font.bold: index === root.selected
+
+                                onStatusChanged: {
+                                    if (status === Image.Error) { alt.text = "Rendering"; retryTimer.start() }
                                 }
                             }
-                            MouseArea {
+
+                            Rectangle {
+                                z: 10
                                 anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onEntered: root.selected = index
-                                onClicked: root.apply(index)
+                                visible: delegateItem.active
+                                color: "transparent"
+                                border.width: Math.max(2, Math.round(3 * root.ui))
+                                border.color: "#ffffff"
                             }
                         }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            // Click a side tile to center it,
+                            // click the centered one to apply.
+                            onClicked: {
+                                if (index === strip.currentIndex) strip.activateCurrent();
+                                else strip.currentIndex = index;
+                            }
+                            onWheel: function(wheel) { strip.flick(-wheel.angleDelta.y * 8, 0); wheel.accepted = true }
+                        }
                     }
+
+                    Keys.onPressed: function(event) {
+                        var k = event.key
+                        if (k === Qt.Key_Space || k === Qt.Key_Return || k === Qt.Key_Enter) {
+                            activateCurrent()
+                        } else if (k === Qt.Key_Left || k === Qt.Key_H) {
+                            decrementCurrentIndex()
+                        } else if (k === Qt.Key_Right || k === Qt.Key_L) {
+                            incrementCurrentIndex()
+                        } else if (k === Qt.Key_C) {
+                            root.setColorGen(!root.colorGen)
+                        } else if (k === Qt.Key_M) {
+                            root.toggleMode()
+                        } else if (k >= Qt.Key_1 && k <= Qt.Key_9) {
+                            quickApply(k - Qt.Key_1)
+                        } else if (k === Qt.Key_0) {
+                            quickApply(9)
+                        } else if (k === Qt.Key_W || k === Qt.Key_Escape || k === Qt.Key_Q) {
+                            root.closeMenu()
+                        } else {
+                            return
+                        }
+                        event.accepted = true
+                    }
+                }
+
+                // Name pill: shows exactly which theme Enter/Space will apply.
+                Rectangle {
+                    anchors.top: strip.bottom
+                    anchors.topMargin: 24 * root.ui
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: nameLabel.implicitWidth + 36 * root.ui
+                    height: nameLabel.implicitHeight + 18 * root.ui
+                    radius: height / 2
+                    color: "#cc000000"
+                    border.width: 1
+                    border.color: "#ffffff"
+
                     Text {
-                        text: "h/l ←/→ move · enter apply · 1-9/0 quick · c colorgen · m mode · esc/q close"
-                        color: Theme.textFaint
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        id: nameLabel
+                        anchors.centerIn: parent
+                        text: strip.count > 0 ? root.themes[strip.currentIndex].label : ""
+                        color: "#ffffff"
+                        font.pixelSize: 15 * root.ui
                     }
+                }
+
+                Text {
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 28 * root.ui
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "h/l ←/→ move · enter apply · 1-9/0 quick · c colorgen · m mode · esc/q close"
+                    color: Theme.textFaint
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 10 * root.ui
                 }
             }
         }

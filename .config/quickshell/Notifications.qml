@@ -90,6 +90,14 @@ Scope {
         function close(): void { root.panelOpen = false; }
         function clear(): void { root.clearHistory(); }
         function dnd(): void { root.toggleDnd(); }
+        function dismiss(): void {
+            const vs = server.trackedNotifications.values;
+            if (vs.length > 0) vs[vs.length - 1].dismiss();
+        }
+        function dismissAll(): void {
+            const vs = server.trackedNotifications.values.slice();
+            for (let i = 0; i < vs.length; i++) vs[i].dismiss();
+        }
     }
 
     // ---- persisted UI state -------------------------------------------------

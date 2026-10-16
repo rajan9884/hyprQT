@@ -5,7 +5,8 @@
 --   launcher: SUPER+Space/D/Q -> qs launcher (fuzzy + =calc)
 --   float-toggle: SUPER+ALT+Space — SUPER+CTRL+Space is wallpaper picker
 --   close window: SUPER+W (SUPER+Q freed)
---   scratchpad: SUPER+S toggle, SUPER+CTRL+S send — Wheel moved to SUPER+ALT+S
+--   scratchpad: SUPER+S toggle, SUPER+CTRL+S + SUPER+ALT+S send,
+--             SUPER+ALT+SHIFT+S bring back (r+0) — Wheel moved to ALT+S
 --   layout-toggle (was L): SUPER+ALT+L — SUPER+L stays theme light/dark
 --   night-light (was CTRL+N): SUPER+CTRL+SHIFT+N — CTRL+N stays network panel
 --   todo (was C): SUPER+ALT+T — SUPER+C/V/X are universal copy/paste/cut
@@ -44,7 +45,7 @@ hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("pgrep -x rofi >/dev/null && pkill -x
 hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("pgrep -x rofi >/dev/null && pkill -x rofi || rofi -show drun"), { description = "App launcher" })
 
 -- ── Quickshell ──
-hl.bind(mainMod .. " + ALT + S", hl.dsp.exec_cmd("qs ipc call wheel toggle"), { description = "Wheel launcher" })
+hl.bind("ALT + S", hl.dsp.exec_cmd("qs ipc call wheel toggle"), { description = "Wheel launcher" })
 hl.bind(mainMod .. " + W", hl.dsp.window.close(), { description = "Close window" })
 hl.bind(mainMod .. " + CTRL + L", hl.dsp.exec_cmd("hyprlock"), { description = "Lock screen" })
 hl.bind(mainMod .. " + GRAVE", hl.dsp.exec_cmd("qs ipc call powermenu toggle"), { description = "Power menu" })
@@ -60,6 +61,9 @@ hl.bind(mainMod .. " + ALT + F", hl.dsp.window.fullscreen({ mode = "maximized" }
 hl.bind(mainMod .. " + O", hl.dsp.exec_cmd(scripts .. "/opacity.sh"), { description = "Opacity menu (100/90/80/70/60/50/40)" })
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("python3 " .. home .. "/.config/43pr/bin/theme.py toggle"), { description = "Light/dark theme" })
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call notifications toggle"), { description = "Notifications" })
+hl.bind("SUPER + comma", hl.dsp.exec_cmd("qs ipc call notifications dismiss"), { locked = true, description = "Dismiss notification" })
+hl.bind("SUPER + CTRL + comma", hl.dsp.exec_cmd("qs ipc call notifications dismissAll"), { locked = true, description = "Dismiss all notifications" })
+hl.bind("SUPER + SHIFT + comma", hl.dsp.exec_cmd("qs ipc call notifications dnd"), { locked = true, description = "Toggle notification silence" })
 hl.bind(mainMod .. " + ALT + T", hl.dsp.exec_cmd("qs ipc call todo toggle"), { description = "To-do list" })
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("qs ipc call bar toggle"), { description = "Toggle bar" })
 
@@ -78,6 +82,8 @@ end, { description = "Toggle floating (small centered 900x600)" })
 -- ── Scratchpad (general + music + terminal, old-arch parity) ──
 hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("scratchpad"), { description = "Toggle scratchpad" })
 hl.bind(mainMod .. " + CTRL + S", hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }), { description = "Move window to scratchpad" })
+hl.bind(mainMod .. " + ALT + S", hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }), { description = "Send window to scratchpad" })
+hl.bind(mainMod .. " + ALT + SHIFT + S", hl.dsp.window.move({ workspace = "r+0" }), { description = "Bring window back from scratchpad" })
 hl.bind(mainMod .. " + ALT + M", hl.dsp.workspace.toggle_special("music"), { description = "Toggle music scratchpad" })
 hl.bind(mainMod .. " + CTRL + ALT + M", hl.dsp.window.move({ workspace = "special:music", follow = false }), { description = "Move window to music scratchpad" })
 hl.bind(mainMod .. " + CTRL + Return", hl.dsp.workspace.toggle_special("terminal"), { description = "Toggle terminal scratchpad" })
@@ -238,8 +244,8 @@ hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd("pkill hyprpicker || hyprpicker -
 hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd(bin .. "/capture-screen"), { description = "Capture entire screen" })
 hl.bind("ALT + Print", hl.dsp.exec_cmd(scripts .. "/screen-record.sh"), { description = "Screen recording" })
 hl.bind("SUPER + CTRL + Print", hl.dsp.exec_cmd(bin .. "/ocr-extract"), { description = "OCR region to clipboard" })
-hl.bind("Delete", hl.dsp.exec_cmd("sh -c 'mkdir -p " .. home .. "/Pictures/Screenshots; file=" .. home .. "/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png; grim \"$file\"; wl-copy < \"$file\"; qs ipc call screenshot notify \"$file\"'"), { description = "Screenshot fullscreen" })
-hl.bind("SHIFT + Delete", hl.dsp.exec_cmd("sh -c 'mkdir -p " .. home .. "/Pictures/Screenshots; file=" .. home .. "/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png; grim -g \"$(slurp)\" \"$file\"; wl-copy < \"$file\"; qs ipc call screenshot notify \"$file\"'"), { description = "Screenshot area" })
+hl.bind("Delete", hl.dsp.exec_cmd("sh -c 'mkdir -p " .. home .. "/Pictures/Screenshots; file=" .. home .. "/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png; grim \"$file\"; wl-copy < \"$file\"; notify-send -t 4000 \"Screenshot saved\" \"$file\"'"), { description = "Screenshot fullscreen" })
+hl.bind("SHIFT + Delete", hl.dsp.exec_cmd("sh -c 'mkdir -p " .. home .. "/Pictures/Screenshots; file=" .. home .. "/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png; grim -g \"$(slurp)\" \"$file\"; wl-copy < \"$file\"; notify-send -t 4000 \"Screenshot saved\" \"$file\"'"), { description = "Screenshot area" })
 
 -- ── Recorder (wf-recorder region toggle) ──
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(scripts .. "/screen-record.sh"), { description = "Screen recording" })

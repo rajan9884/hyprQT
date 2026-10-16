@@ -5,7 +5,7 @@
 -- Opacity rules for all windows except fullscreen
 hl.window_rule({
     match = { class = ".*" },
-    opacity = "0.8 override",
+    opacity = "1.0 override",
 })
 hl.window_rule({
     match = { class = ".*", fullscreen = true },

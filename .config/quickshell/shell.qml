@@ -3,7 +3,6 @@ import Quickshell
 ShellRoot {
     VolumeOsd {}
     SysOsd {}
-    ScreenshotOsd {}
     NetworkPanel {}
     BluetoothPanel {}
     AudioPanel {}

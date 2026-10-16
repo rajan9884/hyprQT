@@ -317,6 +317,28 @@ def render(text, pal, where):
     return result
 
 
+def push_hypr_borders(pal):
+    """Live-apply Hyprland window border colors from the palette.
+
+    Instant, no reload, no file mutation (look.lua keeps neutral
+    fallbacks for first boot). Never raises; silently skips when
+    hyprctl is unavailable or this isn't a Hyprland session.
+    """
+    if not shutil.which("hyprctl") or not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        return
+    try:
+        # This setup uses the Lua parser (hyprland.lua), where `hyprctl
+        # keyword` is rejected ("use eval"), so push live via hl.config.
+        active = pal.get("border_strong", "#d8d8d8").lstrip("#")[:6] + "ff"
+        inactive = pal.get("border", "#5a5a5a").lstrip("#")[:6] + "99"
+        code = ('hl.config({general = {col = {active_border = "rgba(' + active +
+                ')", inactive_border = "rgba(' + inactive + ')"}}})')
+        subprocess.run(["hyprctl", "eval", code],
+                       stdin=subprocess.DEVNULL, capture_output=True, timeout=5)
+    except Exception as e:
+        warn(f"hypr border sync failed: {e}")
+
+
 def apply_palette(pal):
     targets = load_toml(TARGETS) if TARGETS.exists() else {}
     CACHE.mkdir(parents=True, exist_ok=True)
@@ -337,7 +359,8 @@ def apply_palette(pal):
             f.write_text(render(text, render_vars, name))
             staged.append((f, dst))
             if t.get("reload") and t["reload"] not in hooks:
-                hooks.append(t["reload"])
+                # Expand ~ so reload argv stays portable across home dirs.
+                hooks.append([os.path.expanduser(a) for a in t["reload"]])
         for f, dst in staged:                      # 2. only then replace files
             dst.parent.mkdir(parents=True, exist_ok=True)
             tmp = dst.with_name(f".{dst.name}.43pr-tmp")
@@ -354,6 +377,7 @@ def apply_palette(pal):
                 warn(f"reload {h} exited {r.returncode}")
         except Exception as e:
             warn(f"reload {h} failed: {e}")
+    push_hypr_borders(pal)                       # 4. instant border colors
 
 
 def ensure_fallback():

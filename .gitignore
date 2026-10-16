@@ -6,5 +6,6 @@
 .config/btop/themes/43pr.theme
 .config/cava/themes/43pr
 .config/foot/colors.ini
+.config/starship.toml
 .config/quickshell/state/
 __pycache__/

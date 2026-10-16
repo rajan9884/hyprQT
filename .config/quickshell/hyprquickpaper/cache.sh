@@ -23,16 +23,17 @@ mkdir -p "$cache_path"
 echo "Wallpaper path: $wallpaper_path"
 echo "Cache path: $cache_path"
 
-find "$wallpaper_path" -type f \( \
+find "$wallpaper_path" -maxdepth 1 -type f \( \
     -iname "*.jpg" -o \
     -iname "*.jpeg" -o \
-    -iname "*.png" \
+    -iname "*.png" -o \
+    -iname "*.webp" \
 \) | while read -r img; do
 
     filename=$(basename "$img")
     out="$cache_path/$filename"
 
-    if [[ -f "$out" ]]; then
+    if [[ -f "$out" && ! "$img" -nt "$out" ]]; then
         continue
     fi
 
