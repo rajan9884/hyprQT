@@ -462,7 +462,7 @@ Item {
 
     Process {
         id: pEditConfig
-        command: ["sh", "-c", "xed ~/.config/hypr/monitors.lua"]
+        command: ["sh", "-c", "foot -e nvim ~/.config/hypr/monitors.lua"]
         onExited: exitCode => {}
     }
 

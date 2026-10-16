@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2026 rezky_nightky <with.rezky@gmail.com>
+// SPDX-FileCopyrightText: 2026 Rajan <rajan.dev.jaiswal@gmail.com>
 
-// Orion Saturn core
+// Orion Saturn subring
 
 #version 330
 
@@ -56,6 +56,7 @@ void main() {
     float max_r = base_radius + max_len + pad;
 
     float r2 = dot(p, p);
+
     if (r2 > max_r * max_r) {
         fragColor = vec4(bg_color, 1.0);
         return;
@@ -86,8 +87,8 @@ void main() {
 
     float fill = float(bar_width) / max(float(bar_width + bar_spacing), 1.0);
     float angular = abs(f - 0.5);
-    float px_ang = max(length(dFdx(p)), length(dFdy(p)));
-    float df = 0.35 * (float(bc) * px_ang) / (tau * max(r, px_ang));
+    float px = max(length(dFdx(p)), length(dFdy(p)));
+    float df = 0.35 * (float(bc) * px) / (tau * max(r, px));
     float gap_half = (1.0 - fill) * 0.5;
     float eps = 1.0 / (float(bc) * 2048.0);
     float gap_cap = max(gap_half - eps, 0.0);
@@ -107,7 +108,7 @@ void main() {
     float len = min(max(amp * max_len, min_len), max_len_cap);
     float act = smoothstep(0.0, min_len / max_len, amp);
 
-    float dr = clamp(px_ang, min_len, 2.0 * min_len);
+    float dr = clamp(px, min_len, 2.0 * min_len);
     float inner = smoothstep(base_radius - dr, base_radius + dr, r);
     float outer = 1.0 - smoothstep(base_radius + len - dr, base_radius + len + dr, r);
     float radial_alpha = inner * outer * act;
@@ -121,33 +122,33 @@ void main() {
     int core_samples = 0;
 
     int core_limit = min(bc, 64);
-    for (int i = 0; i < core_limit; i += 2) {
+    for (int i = 0; i < core_limit; i += 4) {
         core_energy += clamp(bars[i], 0.0, 1.0);
         core_samples++;
     }
     core_energy /= max(float(core_samples), 1.0);
 
     float core_amp = core_energy * (1.0 + 0.8 * (1.0 - core_energy));
+    float core_radius = mix(0.05, 0.18, clamp(core_amp * 1.2, 0.0, 1.0));
 
-    float core_radius = mix(0.07, 0.25, clamp(core_amp * 1.1, 0.0, 1.0));
-
-    float px = 1.0 / u_resolution.y;
-    float core_edge = max(px * 1.5, 0.003);
     float core_act = smoothstep(0.0, 0.04, core_amp);
+    float core_half_thickness = 0.007;
 
-    float core_feather = core_edge + dr;
-    float core_alpha = 1.0 - smoothstep(core_radius - core_feather, core_radius + core_feather, r);
-    core_alpha = clamp(core_alpha, 0.0, 1.0) * core_act;
+    float core = smoothstep(core_radius - core_half_thickness - dr,
+                            core_radius - core_half_thickness + dr, r) -
+                 smoothstep(core_radius + core_half_thickness - dr,
+                            core_radius + core_half_thickness + dr, r);
+    float core_alpha = clamp(core, 0.0, 1.0) * core_act;
 
     if (ring_alpha == 0.0 && core_alpha == 0.0) {
         fragColor = vec4(bg_color, 1.0);
         return;
     }
 
-    vec3 col_core = gradient_map(core_amp);
     vec3 col_ring = gradient_map(amp);
+    vec3 col_core = gradient_map(core_amp);
 
-    vec3 col = mix(bg_color, col_core, core_alpha);
-    col = mix(col, col_ring, ring_alpha);
+    vec3 col = mix(bg_color, col_ring, ring_alpha);
+    col = mix(col, col_core, core_alpha);
     fragColor = vec4(col, 1.0);
 }

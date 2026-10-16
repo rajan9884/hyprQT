@@ -33,6 +33,7 @@ xdg-utils
 awww
 grim
 slurp
+satty
 imagemagick
 matugen
 
@@ -149,9 +150,5 @@ python
 jq
 curl
 unzip
-
-# --------------------------------------------------
-# Hyprland Companion Apps (AUR)
-# --------------------------------------------------
-
-hyprmod
+gum
+tesseract

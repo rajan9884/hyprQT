@@ -3,7 +3,7 @@
   "id": "hyprqt.webapps",
   "name": "Web Apps",
   "version": "1.0.0",
-  "author": "hyprQT",
+  "author": "Rajan",
   "description": "Install and remove web app launchers without a terminal",
   "kinds": [
     "overlay"

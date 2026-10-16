@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2026 rezky_nightky <with.rezky@gmail.com>
+// SPDX-FileCopyrightText: 2026 Rajan <rajan.dev.jaiswal@gmail.com>
 
 // Static Orion (non-rotating)
 

@@ -24,7 +24,7 @@ set -uo pipefail
 #   - paru / yay   (AUR helpers, optional but recommended)
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC="$REPO_DIR/.config"
+SRC="$REPO_DIR/config"
 CONFIG_DIR="$HOME/.config"
 BACKUP_ROOT="$HOME/.config-backups"
 TIMESTAMP="$(date '+%Y-%m-%d_%H-%M-%S')"
@@ -96,7 +96,7 @@ if ! command -v pacman >/dev/null 2>&1; then
 fi
 
 if [[ ! -d "$SRC" ]]; then
-    error "No .config directory found at $SRC"
+    error "No config directory found at $SRC"
     exit 1
 fi
 
@@ -268,7 +268,7 @@ while IFS= read -r -d '' src; do
     fi
 done < <(find "$SRC" \( -type f -o -type l \) -not -path '*/.git/*' -print0)
 
-# ~/.zshrc is installed from .config/.zshrc but lives outside ~/.config
+# ~/.zshrc is installed from config/.zshrc but lives outside ~/.config
 if [[ -f "$SRC/.zshrc" ]]; then
     if [[ -e "$HOME/.zshrc" && ! -L "$HOME/.zshrc" ]]; then
         mkdir -p "$BACKUP_DIR/home"
@@ -279,8 +279,8 @@ if [[ -f "$SRC/.zshrc" ]]; then
     success "Linked ~/.zshrc."
 fi
 
-# ~/.local/bin helpers live in the repo at .config/hypr/bin (portable, and
-# SRC only maps .config -> ~/.config). Link each into ~/.local/bin so the
+# ~/.local/bin helpers live in the repo at config/hypr/bin (portable, and
+# SRC only maps config -> ~/.config). Link each into ~/.local/bin so the
 # keybinds (which call ~/.local/bin/...) keep working after re-runs.
 if [[ -d "$SRC/hypr/bin" ]]; then
     mkdir -p "$HOME/.local/bin"

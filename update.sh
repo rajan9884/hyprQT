@@ -18,7 +18,7 @@ set -uo pipefail
 #   ./update.sh --restart-shell
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC="$REPO_DIR/.config"
+SRC="$REPO_DIR/config"
 CONFIG_DIR="$HOME/.config"
 PACKAGE_FILE="$REPO_DIR/packages.txt"
 
@@ -60,7 +60,7 @@ if [[ "${EUID}" -eq 0 ]]; then
 fi
 
 if [[ ! -d "$SRC" ]]; then
-    error "No .config directory found at $SRC"
+    error "No config directory found at $SRC"
     exit 1
 fi
 
