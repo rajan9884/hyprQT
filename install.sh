@@ -409,14 +409,14 @@ success "Shell script permissions configured."
 # Default wallpaper (only if the user has no wallpaper recorded yet)
 # --------------------------------------------------
 
-THEME_STATE="${XDG_STATE_HOME:-$HOME/.local/state}/43pr/state.json"
+THEME_STATE="${XDG_STATE_HOME:-$HOME/.local/state}/theme/state.json"
 
 if [[ -f "$DEFAULT_WALLPAPER_DEST" ]] && command -v python3 >/dev/null 2>&1; then
     if [[ -f "$THEME_STATE" ]] && grep -q '"wallpaper":' "$THEME_STATE"; then
         info "A wallpaper is already recorded; leaving it alone."
     else
         info "Setting default wallpaper and generating colors..."
-        python3 "$CONFIG_DIR/43pr/bin/theme.py" wallpaper "$DEFAULT_WALLPAPER_DEST" \
+        python3 "$CONFIG_DIR/theme/bin/theme.py" wallpaper "$DEFAULT_WALLPAPER_DEST" \
             || warning "Could not apply the default wallpaper."
     fi
 fi
@@ -427,7 +427,7 @@ fi
 
 if command -v python3 >/dev/null 2>&1; then
     info "Generating initial theme..."
-    python3 "$CONFIG_DIR/43pr/bin/theme.py" apply \
+    python3 "$CONFIG_DIR/theme/bin/theme.py" apply \
         || warning "Initial theme generation failed."
 else
     warning "python3 not found; skipping initial theme generation. Configs will use the committed fallback colors until you install python3 and run 'theme apply'."

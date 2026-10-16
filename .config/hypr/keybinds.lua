@@ -59,7 +59,7 @@ hl.bind(mainMod .. " + CTRL + Space", hl.dsp.exec_cmd("qs -n -p ~/.config/quicks
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = 0 }), { description = "Toggle fullscreen" })
 hl.bind(mainMod .. " + ALT + F", hl.dsp.window.fullscreen({ mode = "maximized" }), { description = "Maximize window" })
 hl.bind(mainMod .. " + O", hl.dsp.exec_cmd(scripts .. "/opacity.sh"), { description = "Opacity menu (100/90/80/70/60/50/40)" })
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("python3 " .. home .. "/.config/43pr/bin/theme.py toggle"), { description = "Light/dark theme" })
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("python3 " .. home .. "/.config/theme/bin/theme.py toggle"), { description = "Light/dark theme" })
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call notifications toggle"), { description = "Notifications" })
 hl.bind("SUPER + comma", hl.dsp.exec_cmd("qs ipc call notifications dismiss"), { locked = true, description = "Dismiss notification" })
 hl.bind("SUPER + CTRL + comma", hl.dsp.exec_cmd("qs ipc call notifications dismissAll"), { locked = true, description = "Dismiss all notifications" })

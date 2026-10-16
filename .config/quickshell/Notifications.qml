@@ -127,7 +127,7 @@ Scope {
     // once that has finished.
     Process {
         id: mkdirProc
-        command: ["mkdir", "-p", root.home + "/.config/quickshell/state", root.home + "/.cache/43pr"]
+        command: ["mkdir", "-p", root.home + "/.config/quickshell/state", root.home + "/.cache/theme"]
         running: true
         onExited: root.dirsReady = true
     }
@@ -152,7 +152,7 @@ Scope {
 
     FileView {
         id: store
-        path: root.home + "/.cache/43pr/notifications.json"
+        path: root.home + "/.cache/theme/notifications.json"
         printErrors: false
         onLoaded: {
             try {

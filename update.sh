@@ -221,7 +221,7 @@ if [[ "$SKIP_THEME" -eq 1 ]]; then
     info "Skipping theme regeneration (--skip-theme)."
 elif command -v python3 >/dev/null 2>&1; then
     info "Regenerating theme from current palette..."
-    if python3 "$CONFIG_DIR/43pr/bin/theme.py" apply; then
+    if python3 "$CONFIG_DIR/theme/bin/theme.py" apply; then
         success "Theme regenerated and consumers reloaded (Kitty, Waybar)."
     else
         error "Theme regeneration failed, check the error above."

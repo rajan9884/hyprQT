@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# .config/43pr/bin/theme-thumbs.py
-"""Render one preview thumbnail per 43pr preset into ~/.cache/43pr/theme-thumbs/.
+# .config/theme/bin/theme-thumbs.py
+"""Render one preview thumbnail per theme preset into ~/.cache/theme/theme-thumbs/.
 
 Uses only stdlib (tomllib) + ImageMagick `convert` (already required for the
 wallpaper-picker cache). A thumbnail is regenerated only when its preset toml
@@ -19,9 +19,9 @@ import tomllib
 from pathlib import Path
 
 HOME = Path.home()
-ROOT = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config")) / "43pr"
+ROOT = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config")) / "theme"
 THEMES = ROOT / "themes"
-OUT = Path(os.environ.get("XDG_CACHE_HOME", HOME / ".cache")) / "43pr" / "theme-thumbs"
+OUT = Path(os.environ.get("XDG_CACHE_HOME", HOME / ".cache")) / "theme" / "theme-thumbs"
 
 W, H = 360, 500
 

@@ -66,5 +66,5 @@ ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=245'
 export PATH=/home/rj9884/.opencode/bin:$PATH
 
 export PATH="/home/rj9884/.local/bin:$PATH"
-# 43PR theme controller
-theme() { python3 "$HOME/.config/43pr/bin/theme.py" "$@"; }
+# theme controller
+theme() { python3 "$HOME/.config/theme/bin/theme.py" "$@"; }

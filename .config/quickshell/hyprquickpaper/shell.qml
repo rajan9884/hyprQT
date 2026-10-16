@@ -72,7 +72,7 @@ PanelWindow {
 
     FileView {
         id: stateFile
-        path: Quickshell.env("HOME") + "/.local/state/43pr/state.json"
+        path: Quickshell.env("HOME") + "/.local/state/theme/state.json"
         onLoaded: {
             try {
                 const s = JSON.parse(text());

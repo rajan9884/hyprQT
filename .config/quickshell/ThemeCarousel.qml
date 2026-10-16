@@ -12,7 +12,7 @@ import QtQuick.Effects
 // wallpaper picker), 1-9/0 quick-apply + close, C colorgen, M dark/light
 // (toggles stay open for previewing), Esc/Q/W close. The whole system
 // picks up the new theme instantly via Theme.qml watching
-// ~/.cache/43pr/quickshell-theme.json.
+// ~/.cache/theme/quickshell-theme.json.
 Scope {
     id: root
     property bool showing: false
@@ -22,7 +22,7 @@ Scope {
     property bool darkMode: true
     property string currentPreset: ""
 
-    readonly property string thumbPath: Quickshell.env("HOME") + "/.cache/43pr/theme-thumbs/"
+    readonly property string thumbPath: Quickshell.env("HOME") + "/.cache/theme/theme-thumbs/"
     readonly property real ui: (Quickshell.screens[0]?.height ?? 1080) / 1080
     readonly property int animDuration: 220
     readonly property int visibleTiles: 7
@@ -50,7 +50,7 @@ Scope {
 
     function runTheme(cmd) {
         Quickshell.execDetached(["/bin/sh", "-c",
-            "python3 \"$HOME/.config/43pr/bin/theme.py\" " + cmd])
+            "python3 \"$HOME/.config/theme/bin/theme.py\" " + cmd])
         reloadTimer.restart()
     }
     function setColorGen(on) {
@@ -74,7 +74,7 @@ Scope {
 
     FileView {
         id: stateView
-        path: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/43pr/state.json"
+        path: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/theme/state.json"
         watchChanges: true
         printErrors: false
         onFileChanged: reload()
@@ -138,7 +138,7 @@ Scope {
             Component.onCompleted: {
                 strip.forceActiveFocus()
                 Quickshell.execDetached(["python3",
-                    Quickshell.env("HOME") + "/.config/43pr/bin/theme-thumbs.py"])
+                    Quickshell.env("HOME") + "/.config/theme/bin/theme-thumbs.py"])
             }
 
             // Dark veil so thumbnails don't blend into the desktop.

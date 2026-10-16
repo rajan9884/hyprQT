@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# .config/43pr/bin/foot-live.py
-"""Push the active 43pr palette to all running foot instances.
+# .config/theme/bin/foot-live.py
+"""Push the active theme palette to all running foot instances.
 
 Foot only reads colors.ini at startup (SIGUSR1/2 just switch between the
 already-loaded [colors-dark]/[colors-light] sections), so rewriting the file
@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 HOME = Path.home()
-PALETTE = Path(os.environ.get("XDG_CACHE_HOME", HOME / ".cache")) / "43pr" / "palette.json"
+PALETTE = Path(os.environ.get("XDG_CACHE_HOME", HOME / ".cache")) / "theme" / "palette.json"
 
 
 def warn(msg):

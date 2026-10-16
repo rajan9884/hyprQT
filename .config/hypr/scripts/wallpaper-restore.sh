@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Draw the wallpaper recorded by theme.py (set by the installer or the picker).
-state="${XDG_STATE_HOME:-$HOME/.local/state}/43pr/state.json"
+state="${XDG_STATE_HOME:-$HOME/.local/state}/theme/state.json"
 
 img="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("wallpaper",""))' "$state" 2>/dev/null)"
 [[ -f "$img" ]] || exit 0
@@ -15,4 +15,4 @@ awww img "$img" -t none
 
 # Re-render all themed targets from the current palette and push live
 # Hyprland border colors (best-effort; keeps login consistent after reboot).
-python3 "$HOME/.config/43pr/bin/theme.py" apply >/dev/null 2>&1 || true
+python3 "$HOME/.config/theme/bin/theme.py" apply >/dev/null 2>&1 || true
