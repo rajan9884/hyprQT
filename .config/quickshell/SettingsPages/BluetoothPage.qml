@@ -5,6 +5,8 @@ import "../"
 
 Item {
     id: page
+    width: parent ? parent.width : 600
+    height: parent ? parent.height : 480
 
     readonly property BluetoothAdapter adapter: Bluetooth.defaultAdapter
     readonly property bool powered: adapter ? adapter.enabled : false

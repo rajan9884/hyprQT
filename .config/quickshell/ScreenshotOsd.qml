@@ -48,7 +48,7 @@ PanelWindow {
         anchors.top: parent.top
         anchors.topMargin: 30
         radius: 20
-        color: Theme.alpha(Theme.bg, 0.8)   
+        color: Theme.bg
         opacity: root.showing ? 1 : 0
         scale: root.showing ? 1 : 0.9
         Behavior on opacity {

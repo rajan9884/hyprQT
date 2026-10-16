@@ -1,19 +1,95 @@
+#format = """
+#$directory$git_branch$git_status
+#$character
+#"""
+#
+#[directory]
+#style = "bold white"
+#truncation_length = 3
+#
+#[git_branch]
+#symbol = "󰘬 "
+#style = "bright-black"
+#
+#[git_status]
+#style = "bright-black"
+#
+#[character]
+#success_symbol = "[❯](white)"
+#error_symbol = "[❯](bold white)"
+
+
+# Default Material You Starship Config (updated by Matugen)
+"$schema" = 'https://starship.rs/config-schema.json'
+add_newline = true
+palette = "matugen"
+
 format = """
-$directory$git_branch$git_status
-$character
-"""
+[╭─](fg:outline)[](fg:primary_container)$os$username[](fg:primary_container bg:secondary_container)$directory[](fg:secondary_container bg:tertiary_container)$git_branch$git_status[](fg:tertiary_container bg:surface_high)$c$rust$golang$nodejs$python$lua[](fg:surface_high)$fill[](fg:surface_high)$cmd_duration[](fg:primary_container bg:surface_high)$time[](fg:primary_container)
+[╰─](fg:outline)$character"""
+
+[palettes.matugen]
+primary = "#aac7ff"
+on_primary = "#0a305f"
+primary_container = "#284777"
+on_primary_container = "#d6e3ff"
+secondary = "#bec6dc"
+secondary_container = "#3e4759"
+on_secondary_container = "#dae2f9"
+tertiary = "#ddbce0"
+tertiary_container = "#573e5c"
+on_tertiary_container = "#fad8fd"
+surface = "#111318"
+surface_high = "#282a2f"
+on_surface = "#e2e2e9"
+on_surface_variant = "#c4c6d0"
+outline = "#44474e"
+error = "#ffb4ab"
+
+[os]
+disabled = false
+style = "bg:primary_container fg:on_primary_container bold"
+[os.symbols]
+Arch = " "
+Linux = " "
+
+[username]
+show_always = false
+style_user = "bg:primary_container fg:on_primary_container bold"
+style_root = "bg:error fg:on_primary bold"
+format = '[$user ]($style)'
 
 [directory]
-style = "bold white"
+style = "bg:secondary_container fg:on_secondary_container bold"
+format = "[ $path ]($style)"
 truncation_length = 3
+truncation_symbol = "…/"
 
 [git_branch]
-symbol = "󰘬 "
-style = "bright-black"
+symbol = ""
+style = "bg:tertiary_container fg:on_tertiary_container bold"
+format = '[ $symbol $branch ]($style)'
 
 [git_status]
-style = "bright-black"
+style = "bg:tertiary_container fg:on_tertiary_container"
+format = '[$all_status$ahead_behind ]($style)'
+
+[fill]
+symbol = "·"
+style = "fg:outline"
+
+[cmd_duration]
+min_time = 500
+style = "bg:surface_high fg:on_surface_variant"
+format = "[  $duration ]($style)"
+
+[time]
+disabled = false
+time_format = "%H:%M"
+style = "bg:primary_container fg:on_primary_container bold"
+format = '[  $time ]($style)'
 
 [character]
-success_symbol = "[❯](white)"
-error_symbol = "[❯](bold white)"
+success_symbol = '[❯](bold fg:primary)'
+error_symbol = '[❯](bold fg:error)'
+vimcmd_symbol = '[❮](bold fg:tertiary)'

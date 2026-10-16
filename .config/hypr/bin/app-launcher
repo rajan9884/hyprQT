@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# app-launcher — original rofi drun (420x290 theme).
+# Toggle: if rofi already open, close it; otherwise open drun.
+set -uo pipefail
+if pgrep -x rofi >/dev/null; then
+    pkill -x rofi
+else
+    exec rofi -show drun "$@"
+fi

@@ -1,5 +1,8 @@
 eval "$(starship init zsh)"
 
+# Hyprland launches GUI apps with cwd=/ — never start an interactive shell at /.
+[[ "$PWD" == "/" ]] && cd "$HOME" >/dev/null 2>&1 || true
+
 # Monochrome eza
 export EZA_COLORS="uu=bright-black:gu=bright-black:da=bright-black:ur=white:uw=bright-black:ux=white:ue=bright-black:gr=bright-black:gw=bright-black:gx=white:tr=bright-black:fi=white:di=bright-white:ln=bright-black:pi=bright-black:so=bright-black:bd=bright-black:cd=bright-black:or=bright-black:mi=bright-black:ex=white"
 
@@ -61,5 +64,7 @@ ZSH_HIGHLIGHT_STYLES[comment]='fg=240'
 ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=245'
 
 export PATH=/home/rj9884/.opencode/bin:$PATH
+
+export PATH="/home/rj9884/.local/bin:$PATH"
 # 43PR theme controller
 theme() { python3 "$HOME/.config/43pr/bin/theme.py" "$@"; }

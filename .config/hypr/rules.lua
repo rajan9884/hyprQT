@@ -2,16 +2,10 @@
 -- To check class name, open the app and run:
 -- hyprctl clients
 
-hl.layer_rule({
-    match = { namespace = "rofi" },
-    blur = true,
-    ignore_alpha = 0.15,
-})
-
 -- Opacity rules for all windows except fullscreen
 hl.window_rule({
     match = { class = ".*" },
-    opacity = "1.0 override",
+    opacity = "0.8 override",
 })
 hl.window_rule({
     match = { class = ".*", fullscreen = true },
@@ -25,7 +19,7 @@ hl.window_rule({
 --})
 
 hl.window_rule({
-    match = { class = "kitty" },
+    match = { class = "foot" },
     suppress_event = "maximize",
 })
 

@@ -115,6 +115,7 @@ Scope {
                             Loader {
                                 id: pageLoader
                                 width: pageFlick.width
+                                height: pageFlick.height
                                 source: "SettingsPages/AudioPage.qml"
                             }
                         }

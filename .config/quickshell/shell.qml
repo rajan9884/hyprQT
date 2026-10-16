@@ -2,6 +2,7 @@ import Quickshell
 
 ShellRoot {
     VolumeOsd {}
+    SysOsd {}
     ScreenshotOsd {}
     NetworkPanel {}
     BluetoothPanel {}
@@ -10,6 +11,10 @@ ShellRoot {
     ThemeCarousel {}
     Notifications {}
     PowerMenu {}
+    Launcher {}
+    Clipboard {}
+    Emoji {}
+    Cheatsheet {}
     Bar {}
     Todo {}
     Wheel {}

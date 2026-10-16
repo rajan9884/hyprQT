@@ -52,7 +52,9 @@ Scope {
         labelSize:    { min: 9,   max: 22,  def: 11,  step: 1,  unit: "px" },
         borderWidth:  { min: 0,   max: 4,   def: 1,   step: 1,  unit: "px" },
 
-        panelOpacity: { min: 0,   max: 100, def: 0,   step: 5,  unit: "%" },
+        // Panel background defaults to the live SUPER+O opacity so the menu
+        // matches windows/bar/other panels without needing its own slider.
+        panelOpacity: { min: 0,   max: 100, def: Math.round((Theme.bg.a ?? 1) * 20) * 5, step: 5, unit: "%" },
         itemOpacity:  { min: 0,   max: 100, def: Math.round((Theme.bg.a ?? 1) * 20) * 5, step: 5, unit: "%" },
         hoverBoost:   { min: 0,   max: 40,  def: 12,  step: 2,  unit: "%" },
         dimOpacity:   { min: 0,   max: 80,  def: 0,   step: 5,  unit: "%" }
@@ -64,7 +66,6 @@ Scope {
         showIcons: true,
         showLabels: true,
         showKeyHints: true,
-        showFooter: true,
         confirmDangerous: false,
         wrapNav: true,
         hoverSelect: true,
@@ -99,13 +100,11 @@ Scope {
     property bool showIcons: boolDefaults.showIcons
     property bool showLabels: boolDefaults.showLabels
     property bool showKeyHints: boolDefaults.showKeyHints
-    property bool showFooter: boolDefaults.showFooter
     property bool confirmDangerous: boolDefaults.confirmDangerous
     property bool wrapNav: boolDefaults.wrapNav
     property bool hoverSelect: boolDefaults.hoverSelect
     property bool closeOnOutside: boolDefaults.closeOnOutside
 
-    property bool settingsOpen: false
     property bool dragging: false
     property int currentIndex: 0
     property string confirmName: ""
@@ -121,18 +120,9 @@ Scope {
     readonly property bool lightMode: Theme._bgBase.hslLightness > 0.5
 
     // colours derived from the theme + opacity settings
-    readonly property color panelColor: Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b, panelOpacity / 100)
     readonly property color itemColor: Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b, itemOpacity / 100)
     readonly property color itemHoverColor: Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b,
                                                     Math.min(1, itemOpacity / 100 + hoverBoost / 100))
-
-    readonly property bool movedFromDefault: posKeys.some(k => root[k] !== 0)
-
-    readonly property bool modified:
-        posKeys.some(k => root[k] !== 0)
-        || numKeys.some(k => root[k] !== numSpec[k].def)
-        || boolKeys.some(k => root[k] !== boolDefaults[k])
-        || hiddenNames.length > 0
 
     readonly property string iconDir: "file://" + Quickshell.env("HOME") + "/.config/quickshell/imgs/"
     readonly property string statePath: Quickshell.env("HOME") + "/.config/quickshell/state/powermenu-state.json"
@@ -162,10 +152,6 @@ Scope {
     }
 
     function runAction(a) {
-        // the menu stays visible while settings are open for live preview,
-        // so never fire real actions from it
-        if (root.settingsOpen)
-            return
         if (root.confirmDangerous && a.danger && root.confirmName !== a.name) {
             root.confirmName = a.name
             return
@@ -196,86 +182,21 @@ Scope {
         }
         currentIndex = 0
         confirmName = ""
-        settingsOpen = false
         dragging = false
         showing = true   // onShowingChanged mounts the window
     }
 
     function closeMenu() {
         showing = false
-        settingsOpen = false
         dragging = false
         confirmName = ""
     }
     function toggleMenu() { showing ? closeMenu() : openMenu() }
 
-    function openSettings() {
-        if (!showing) openMenu()
-        dragging = false
-        settingsOpen = true
-    }
-    function closeSettings() {
-        settingsOpen = false
-        dragging = false
-    }
-    function toggleSettings() { settingsOpen ? closeSettings() : openSettings() }
-
-    // ---- settings helpers --------------------------------------------------
-    function fmtValue(key, v) {
-        var s = numSpec[key]
-        return v + s.unit
-    }
-
-    function reclamp() {
-        if (root.showing)
-            root.setPosition(root.offsetX, root.offsetY)
-    }
-
-    function setNumber(key, v) {
-        var s = numSpec[key]
-        root[key] = clamp(v, s.min, s.max)
-        reclamp()
-    }
-
-    function stepNumber(key, dir) {
-        var s = numSpec[key]
-        setNumber(key, root[key] + dir * s.step)
-        saveState()
-    }
-
-    function toggleSetting(key) {
-        root[key] = !root[key]
-        reclamp()
-        saveState()
-    }
-
-    function toggleAction(name) {
-        var h = root.hiddenNames.slice()
-        var i = h.indexOf(name)
-        if (i >= 0)
-            h.splice(i, 1)
-        else if (root.visibleActions.length > 1)
-            h.push(name)
-        root.hiddenNames = h
-        if (root.currentIndex >= root.visibleActions.length)
-            root.currentIndex = 0
-        root.saveState()
-    }
-
     function resetPosition() {
         root.offsetX = 0
         root.offsetY = 0
         root.saveState()
-    }
-
-    function resetAll() {
-        posKeys.forEach(function (k) { root[k] = 0 })
-        numKeys.forEach(function (k) { root[k] = numSpec[k].def })
-        boolKeys.forEach(function (k) { root[k] = boolDefaults[k] })
-        root.hiddenNames = []
-        root.currentIndex = 0
-        reclamp()
-        saveState()
     }
 
     function saveState() {
@@ -311,7 +232,6 @@ Scope {
         function toggle(): void { root.toggleMenu() }
         function show(): void { root.openMenu() }
         function hide(): void { root.closeMenu() }
-        function settings(): void { root.openSettings() }
     }
 
     FileView {
@@ -364,9 +284,7 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.namespace: "powermenu"
-            // Released while the settings window is open so that it can
-            // take keyboard focus (Escape, etc.).
-            WlrLayershell.keyboardFocus: (root.showing && !root.settingsOpen)
+            WlrLayershell.keyboardFocus: root.showing
                 ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
             mask: Region { item: root.showing ? menuRoot : null }
@@ -396,12 +314,6 @@ Scope {
                     if (!root.showing) return
                     var t = event.text.toLowerCase()
 
-                    if (root.settingsOpen) {
-                        if (event.key === Qt.Key_Escape || t === "c")
-                            root.closeSettings()
-                        event.accepted = true
-                        return
-                    }
                     if (event.key === Qt.Key_Escape) {
                         root.closeMenu()
                         event.accepted = true
@@ -428,11 +340,6 @@ Scope {
                         event.accepted = true
                         return
                     }
-                    if (t === "c") {
-                        root.openSettings()
-                        event.accepted = true
-                        return
-                    }
                     for (var i = 0; i < root.visibleActions.length; i++) {
                         if (t === root.visibleActions[i].key) {
                             root.currentIndex = i
@@ -455,9 +362,7 @@ Scope {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        if (root.settingsOpen)
-                            root.closeSettings()
-                        else if (root.closeOnOutside)
+                        if (root.closeOnOutside)
                             root.closeMenu()
                     }
                 }
@@ -467,7 +372,9 @@ Scope {
                     width: root.cardWidth
                     height: panelCol.height + 2 * root.panelPadding
                     radius: root.panelRadius
-                    color: root.panelColor
+                    // No container background: entries float as separate
+                    // cards with gaps (itemSpacing), no parent box.
+                    color: "transparent"
                     transformOrigin: Item.TopRight
                     scale: root.menuSize / 100
                     anchors.top: parent.top
@@ -659,539 +566,10 @@ Scope {
                                 }
                             }
                         }
-
-                        // ---- footer: size controls + settings button ----
-                        Item {
-                            visible: root.showFooter
-                            width: parent.width
-                            height: 16
-
-                            SizeControl {
-                                anchors.left: parent.left
-                                anchors.leftMargin: 2
-                                anchors.verticalCenter: parent.verticalCenter
-                                onStep: function (d) { root.stepNumber("menuSize", d) }
-                            }
-
-                            FooterButton {
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                label: "󰒓"
-                                fontSize: 12
-                                active: root.settingsOpen
-                                opacity: (hovered || root.settingsOpen) ? 1 : 0.1
-                                onClicked: root.toggleSettings()
-                            }
-                        }
                     }
                 }
             }
         }
     }
 
-    LazyLoader {
-        active: root.settingsOpen
-
-        PanelWindow {
-            id: settingsWin
-            screen: root.targetScreen
-
-            color: "transparent"
-            implicitWidth: 420
-            implicitHeight: Math.min(640, (screen?.height ?? 800) * 0.85)
-            exclusionMode: ExclusionMode.Ignore
-
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.namespace: "powermenu-settings"
-            WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-
-            Rectangle {
-                anchors.fill: parent
-                radius: 20
-                color: Theme.bg
-                border.width: 1
-                border.color: Theme.alpha(Theme.text, 0.12)
-            }
-
-            FocusScope {
-                anchors.fill: parent
-                focus: true
-                Keys.onEscapePressed: root.closeSettings()
-
-                // header
-                Item {
-                    id: head
-                    anchors.top: parent.top
-                    width: parent.width
-                    height: 60
-
-                    Text {
-                        x: 20; y: 12
-                        text: "Power menu settings"
-                        font.pixelSize: 15
-                        font.bold: true
-                        color: Theme.text
-                    }
-                    Text {
-                        x: 20; y: 34
-                        text: "Drag the menu's handle to move it, double-click it to reset."
-                        font.pixelSize: 10
-                        color: Theme.textDim
-                    }
-                    Text {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 20
-                        y: 10
-                        width: 24; height: 24
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        text: "×"
-                        font.pixelSize: 22
-                        color: closeArea.containsMouse ? Theme.text : Theme.textDim
-                        MouseArea {
-                            id: closeArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: root.closeSettings()
-                        }
-                    }
-                }
-
-                // Everything below the header scrolls (mouse wheel, drag,
-                // or the scrollbar on the right edge).
-                Flickable {
-                    id: flick
-                    anchors.top: head.bottom
-                    anchors.topMargin: 4
-                    anchors.bottom: foot.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    contentWidth: width
-                    contentHeight: contentCol.height + 16
-                    clip: true
-                    flickableDirection: Flickable.VerticalFlick
-                    boundsBehavior: Flickable.StopAtBounds
-
-                    WheelHandler {
-                        onWheel: event => {
-                            var max = Math.max(0, flick.contentHeight - flick.height)
-                            flick.contentY = Math.max(0, Math.min(max, flick.contentY - event.angleDelta.y / 2))
-                        }
-                    }
-
-                    Column {
-                        id: contentCol
-                        x: 20
-                        width: flick.width - 48
-
-                        SectionHeader { text: "Global" }
-                        SliderRow { host: root; key: "menuSize"; label: "Scale" }
-                        SliderRow { host: root; key: "animMs"; label: "Animation duration" }
-
-                        SectionHeader { text: "Layout" }
-                        ToggleRow { host: root; key: "horizontal"; label: "Horizontal layout"; checked: root.horizontal }
-                        SliderRow { host: root; key: "cardWidth"; label: "Width" }
-                        SliderRow { host: root; key: "itemHeight"; label: "Item height" }
-                        SliderRow { host: root; key: "itemSpacing"; label: "Item spacing" }
-                        SliderRow { host: root; key: "panelPadding"; label: "Panel padding" }
-                        SliderRow { host: root; key: "topGap"; label: "Top margin" }
-                        SliderRow { host: root; key: "sideGap"; label: "Right margin" }
-
-                        SectionHeader { text: "Content" }
-                        ToggleRow { host: root; key: "showIcons"; label: "Icons"; checked: root.showIcons }
-                        ToggleRow { host: root; key: "showLabels"; label: "Labels"; checked: root.showLabels }
-                        ToggleRow {
-                            host: root
-                            key: "showKeyHints"
-                            label: "Key hints"
-                            checked: root.showKeyHints
-                            enabled: !root.horizontal
-                        }
-                        ToggleRow {
-                            host: root
-                            key: "showFooter"
-                            label: "Footer controls (scale / settings)"
-                            checked: root.showFooter
-                        }
-
-                        SectionHeader { text: "Appearance" }
-                        SliderRow { host: root; key: "panelRadius"; label: "Panel roundness" }
-                        SliderRow { host: root; key: "itemRadius"; label: "Item roundness" }
-                        SliderRow { host: root; key: "iconSize"; label: "Icon size"; enabled: root.showIcons }
-                        SliderRow { host: root; key: "labelSize"; label: "Label size"; enabled: root.showLabels }
-                        SliderRow { host: root; key: "borderWidth"; label: "Selection border" }
-
-                        SectionHeader { text: "Opacity" }
-                        SliderRow { host: root; key: "panelOpacity"; label: "Panel background" }
-                        SliderRow { host: root; key: "itemOpacity"; label: "Item background" }
-                        SliderRow { host: root; key: "hoverBoost"; label: "Hover / selected highlight" }
-                        SliderRow { host: root; key: "dimOpacity"; label: "Dim screen behind menu" }
-
-                        SectionHeader { text: "Behavior" }
-                        ToggleRow { host: root; key: "confirmDangerous"; label: "Confirm shutdown / reboot / logout"; checked: root.confirmDangerous }
-                        ToggleRow { host: root; key: "wrapNav"; label: "Wrap around when navigating"; checked: root.wrapNav }
-                        ToggleRow { host: root; key: "hoverSelect"; label: "Hover selects item"; checked: root.hoverSelect }
-                        ToggleRow { host: root; key: "closeOnOutside"; label: "Close on click outside"; checked: root.closeOnOutside }
-
-                        SectionHeader { text: "Visible actions" }
-                        Repeater {
-                            model: root.actions
-                            delegate: ToggleRow {
-                                required property var modelData
-                                host: root
-                                label: modelData.label + "  (" + modelData.key.toUpperCase() + ")"
-                                checked: root.hiddenNames.indexOf(modelData.name) < 0
-                                onToggled: root.toggleAction(modelData.name)
-                            }
-                        }
-
-                        SectionHeader { text: "Position" }
-                        ActionButton {
-                            label: "Reset position"
-                            enabled: root.movedFromDefault
-                            onClicked: root.resetPosition()
-                        }
-                    }
-                }
-
-                // The scrollbar sits outside the Flickable's content so it
-                // doesn't scroll away with it.
-                Rectangle {
-                    id: sbTrack
-                    visible: flick.contentHeight > flick.height
-                    x: flick.x + flick.width - 14
-                    y: flick.y
-                    width: 4
-                    height: flick.height
-                    radius: 2
-                    color: Theme.alpha(Theme.text, 0.08)
-                }
-
-                Rectangle {
-                    id: sbHandle
-                    visible: flick.contentHeight > flick.height
-                    x: flick.x + flick.width - 14
-                    width: 4
-                    radius: 2
-                    height: Math.max(24, flick.height * flick.visibleArea.heightRatio)
-                    y: flick.y + flick.visibleArea.yPosition * flick.height
-                    color: Theme.text
-                    opacity: (sbArea.containsMouse || sbArea.pressed || flick.moving) ? 0.7 : 0.3
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
-
-                    MouseArea {
-                        id: sbArea
-                        anchors.fill: parent
-                        anchors.margins: -5
-                        hoverEnabled: true
-
-                        // Not using drag.target: dragging would overwrite the
-                        // handle's y binding and it would stop following the
-                        // wheel afterwards. Drive contentY instead.
-                        property real grabY: 0
-
-                        onPressed: mouse => {
-                            grabY = mapToItem(flick, mouse.x, mouse.y).y
-                                - flick.visibleArea.yPosition * flick.height
-                        }
-                        onPositionChanged: mouse => {
-                            if (!pressed)
-                                return
-                            var span = flick.height - sbHandle.height
-                            if (span <= 0)
-                                return
-                            var ny = mapToItem(flick, mouse.x, mouse.y).y - grabY
-                            var r = Math.max(0, Math.min(1, ny / span))
-                            flick.contentY = r * (flick.contentHeight - flick.height)
-                        }
-                    }
-                }
-
-                // footer
-                Item {
-                    id: foot
-                    anchors.bottom: parent.bottom
-                    width: parent.width
-                    height: 58
-
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: Theme.alpha(Theme.text, 0.08)
-                    }
-
-                    ActionButton {
-                        x: 20
-                        anchors.verticalCenter: parent.verticalCenter
-                        label: "Reset all"
-                        enabled: root.modified
-                        onClicked: root.resetAll()
-                    }
-                    ActionButton {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 20
-                        anchors.verticalCenter: parent.verticalCenter
-                        label: "Done"
-                        primary: true
-                        onClicked: root.closeSettings()
-                    }
-                }
-            }
-        }
-    }
-
-    // ---- reusable components -----------------------------------------------
-    component FooterButton: Rectangle {
-        id: fb
-        property string label: ""
-        property int fontSize: 11
-        property bool active: false
-        property color textColor: Theme.textDim
-        readonly property bool hovered: fbArea.containsMouse
-        signal clicked()
-
-        width: 16; height: 16; radius: 6
-        color: Theme.bg
-        Behavior on color { ColorAnimation { duration: 120 } }
-        Behavior on opacity { NumberAnimation { duration: 120 } }
-
-        Text {
-            anchors.centerIn: parent
-            text: fb.label
-            font.family: "Symbols Nerd Font"
-            font.pixelSize: fb.fontSize
-            font.bold: true
-            color: fb.active ? Theme.accent : (fb.hovered ? Theme.text : fb.textColor)
-        }
-
-        MouseArea {
-            id: fbArea
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: fb.clicked()
-        }
-    }
-
-    component SizeBtn: Text {
-        signal clicked()
-        height: 14
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-        color: Theme.text
-        MouseArea { anchors.fill: parent; onClicked: parent.clicked() }
-    }
-
-    component SizeControl: Row {
-        id: sc
-        signal step(int delta)
-
-        spacing: 4
-        opacity: scHover.hovered ? 0.9 : 0.35
-        Behavior on opacity { NumberAnimation { duration: 150 } }
-        HoverHandler { id: scHover }
-
-        SizeBtn { text: "−"; width: 16; font.pixelSize: 12; onClicked: sc.step(-1) }
-        SizeBtn { text: "+"; width: 16; font.pixelSize: 12; onClicked: sc.step(1) }
-    }
-
-    component ActionButton: Rectangle {
-        id: ab
-        property string label: ""
-        property bool primary: false
-        signal clicked()
-
-        implicitWidth: abText.implicitWidth + 28
-        width: implicitWidth
-        height: 30
-        radius: 15
-        opacity: enabled ? 1 : 0.4
-        color: primary
-            ? Theme.accent
-            : Theme.alpha(Theme.text, abArea.containsMouse ? 0.18 : 0.1)
-        Behavior on color { ColorAnimation { duration: 120 } }
-
-        Text {
-            id: abText
-            anchors.centerIn: parent
-            text: ab.label
-            font.pixelSize: 11
-            font.bold: true
-            color: ab.primary ? Theme.bg : Theme.text
-        }
-
-        MouseArea {
-            id: abArea
-            anchors.fill: parent
-            hoverEnabled: true
-            enabled: ab.enabled
-            onClicked: ab.clicked()
-        }
-    }
-
-    component SectionHeader: Item {
-        property string text: ""
-        width: parent?.width ?? 0
-        height: 32
-
-        Text {
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 4
-            text: parent.text
-            font.pixelSize: 10
-            font.bold: true
-            font.letterSpacing: 1.2
-            font.capitalization: Font.AllUppercase
-            color: Theme.textDim
-        }
-    }
-
-    // Toggle row. With a `key` it flips that boolean setting on the host;
-    // without one it just emits `toggled()` (used for the action list).
-    component ToggleRow: Item {
-        id: tr
-        property var host
-        property string key: ""
-        property string label: ""
-        property bool checked: false
-        signal toggled()
-
-        width: parent?.width ?? 0
-        height: 34
-        opacity: enabled ? 1 : 0.4
-
-        Rectangle {
-            anchors.fill: parent
-            anchors.leftMargin: -8
-            anchors.rightMargin: -8
-            radius: 8
-            color: trArea.containsMouse && tr.enabled ? Theme.alpha(Theme.text, 0.06) : "transparent"
-        }
-
-        Text {
-            anchors.left: parent.left
-            anchors.right: sw.left
-            anchors.rightMargin: 12
-            anchors.verticalCenter: parent.verticalCenter
-            text: tr.label
-            elide: Text.ElideRight
-            font.pixelSize: 12
-            font.bold: true
-            color: Theme.text
-        }
-
-        Rectangle {
-            id: sw
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            width: 36; height: 20; radius: 10
-            color: tr.checked ? Theme.accent : "transparent"
-            border.width: 1
-            border.color: tr.checked ? Theme.accent : Theme.alpha(Theme.text, 0.3)
-            Behavior on color { ColorAnimation { duration: 150 } }
-
-            Rectangle {
-                width: 14; height: 14; radius: 7
-                anchors.verticalCenter: parent.verticalCenter
-                x: tr.checked ? parent.width - width - 3 : 3
-                color: tr.checked ? Theme.bg : Theme.text
-                Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-            }
-        }
-
-        MouseArea {
-            id: trArea
-            anchors.fill: parent
-            hoverEnabled: true
-            enabled: tr.enabled
-            onClicked: {
-                if (tr.key !== "")
-                    tr.host.toggleSetting(tr.key)
-                else
-                    tr.toggled()
-            }
-        }
-    }
-
-    // Self-contained minimal slider. Reads/writes a numSpec entry on the
-    // host and saves on release.
-    component SliderRow: Item {
-        id: sr
-        property var host
-        property string key: ""
-        property string label: ""
-
-        readonly property var spec: host.numSpec[key]
-        readonly property real ratio: Math.max(0, Math.min(1,
-            (host[key] - spec.min) / (spec.max - spec.min)))
-
-        width: parent?.width ?? 0
-        height: 44
-        opacity: enabled ? 1 : 0.4
-
-        Text {
-            anchors.left: parent.left
-            y: 6
-            text: sr.label
-            font.pixelSize: 12
-            font.bold: true
-            color: Theme.text
-        }
-
-        Text {
-            anchors.right: parent.right
-            y: 6
-            text: sr.host.fmtValue(sr.key, sr.host[sr.key])
-            font.pixelSize: 11
-            color: Theme.textDim
-        }
-
-        Rectangle {
-            id: track
-            anchors.left: parent.left
-            anchors.right: parent.right
-            y: 30
-            height: 4
-            radius: 2
-            color: Theme.alpha(Theme.text, 0.15)
-
-            Rectangle {
-                width: knob.x + knob.width / 2
-                height: parent.height
-                radius: 2
-                color: Theme.accent
-            }
-
-            Rectangle {
-                id: knob
-                width: 14
-                height: 14
-                radius: 7
-                anchors.verticalCenter: parent.verticalCenter
-                x: sr.ratio * (track.width - width)
-                color: Theme.text
-            }
-        }
-
-        MouseArea {
-            id: sliderArea
-            anchors.fill: parent
-            anchors.topMargin: 20
-            enabled: sr.enabled
-
-            function apply(mx) {
-                var usable = track.width - knob.width
-                if (usable <= 0)
-                    return
-                var r = Math.max(0, Math.min(1, (mx - knob.width / 2) / usable))
-                var s = sr.spec
-                sr.host.setNumber(sr.key,
-                    s.min + Math.round(r * (s.max - s.min) / s.step) * s.step)
-            }
-
-            onPressed: mouse => apply(mouse.x)
-            onPositionChanged: mouse => { if (pressed) apply(mouse.x) }
-            onReleased: sr.host.saveState()
-        }
-    }
 }

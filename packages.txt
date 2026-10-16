@@ -13,7 +13,6 @@ hyprland
 hyprlock
 hyprpolkitagent
 quickshell
-rofi
 polkit
 qt6-wayland
 
@@ -42,10 +41,8 @@ matugen
 # --------------------------------------------------
 
 networkmanager
-network-manager-applet
 bluez
 bluez-utils
-blueman                  # blueman-manager
 
 # --------------------------------------------------
 # Audio
@@ -55,7 +52,6 @@ pipewire
 pipewire-audio
 pipewire-pulse
 wireplumber
-pavucontrol
 playerctl
 
 # --------------------------------------------------
@@ -69,12 +65,13 @@ wl-clipboard
 # Terminal / Shell
 # --------------------------------------------------
 
-kitty
 zsh
 zsh-autosuggestions
 zsh-syntax-highlighting
 starship
 eza
+foot
+libqalculate
 
 # --------------------------------------------------
 # File Manager / File Utilities
@@ -86,8 +83,6 @@ thunar-archive-plugin
 gvfs
 tumbler
 ffmpegthumbnailer
-xed
-ncdu
 
 # --------------------------------------------------
 # GTK / Theming / Icons / Appearance
@@ -115,12 +110,8 @@ mpv
 # --------------------------------------------------
 
 btop
-nvtop
-dmidecode
 brightnessctl
-gammastep
 power-profiles-daemon
-lm_sensors
 
 # --------------------------------------------------
 # Desktop Notifications
@@ -134,7 +125,6 @@ libnotify
 
 cava
 fastfetch
-cmatrix
 
 # --------------------------------------------------
 # Fonts
@@ -146,12 +136,17 @@ ttf-roboto-mono
 otf-font-awesome
 
 # --------------------------------------------------
+# App launcher (original rofi look)
+# --------------------------------------------------
+
+rofi
+
+# --------------------------------------------------
 # Scripting / Package / Application Utilities
 # --------------------------------------------------
 
 python
 jq
-flatpak
 curl
 unzip
 

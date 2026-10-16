@@ -40,6 +40,15 @@ if [[ -n "$pid" ]] && [[ "$pid" =~ ^[0-9]+$ ]]; then
 	fi
 fi
 
+# Hyprland itself runs with cwd=/, so a bare `foot` (or any child that
+# inherits /) would open new terminals at /. Never keep / — fall back to HOME.
+if [[ -z "${dir:-}" || "$dir" == "/" ]]; then
+	dir="$HOME"
+fi
+if [[ ! -d "$dir" ]]; then
+	dir="$HOME"
+fi
+
 # Primary terminal from vars.lua (foot = lightest, alacritty = GPU).
 # Both accept --working-directory. Override: TERMINAL=alacritty.
 TERM_BIN="${TERMINAL:-foot}"

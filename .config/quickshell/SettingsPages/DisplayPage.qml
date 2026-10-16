@@ -6,6 +6,8 @@ import "../"
 
 Item {
     id: page
+    width: parent ? parent.width : 600
+    height: parent ? parent.height : 480
 
     property var monitors: []
     property var savedState: ({})

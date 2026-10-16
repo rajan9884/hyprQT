@@ -161,8 +161,6 @@ case "${1:-autodetect}" in
     cmd_watch
     ;;
   menu)
-    THEME="$HOME/.config/rofi/active-scripts.rasi"
-    [[ -f "$THEME" ]] || THEME="$HOME/.config/rofi/theme.rasi"
     current=$(current_profile)
     entries=()
     while read -r p active; do
@@ -173,7 +171,7 @@ case "${1:-autodetect}" in
         entries+=("$p")
       fi
     done < <(list_profiles)
-    choice=$(printf '%s\n' "${entries[@]}" | rofi -dmenu -p "Power Profile" -theme "$THEME")
+    choice=$(printf '%s\n' "${entries[@]}" | rofi -dmenu -p "Power Profile")
     [[ -z $choice ]] && exit 0
     chosen=${choice%% *}
     if [[ $chosen != "$current" ]]; then

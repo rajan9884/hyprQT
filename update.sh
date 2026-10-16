@@ -23,13 +23,11 @@ CONFIG_DIR="$HOME/.config"
 PACKAGE_FILE="$REPO_DIR/packages.txt"
 
 GENERATED_FILES=(
-    "kitty/matugen.conf"
     "hypr/hyprlock-colors.conf"
     "gtk-3.0/colors.css"
     "gtk-4.0/colors.css"
     "gtk-3.0/settings.ini"
     "gtk-4.0/settings.ini"
-    "rofi/colors.rasi"
     "quickshell/Theme.qml"
 )
 

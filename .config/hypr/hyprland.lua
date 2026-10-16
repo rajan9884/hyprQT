@@ -5,7 +5,6 @@
 
 mainMod    = "SUPER"
 terminal   = "foot"
-menu       = "rofi -show drun"
 fileManager = "thunar"
 browser    = "brave"
 
@@ -20,7 +19,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
     hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
     hl.exec_cmd(home .. "/.config/hypr/scripts/portal-warmup.sh")
-    hl.exec_cmd("sh -c 'pgrep -x swayosd-server >/dev/null || exec swayosd-server'")
     hl.exec_cmd(home .. "/.local/bin/power-profiles watch")
     hl.exec_cmd("thunar --daemon 2>/dev/null &")
     hl.exec_cmd("hypridle")
@@ -80,6 +78,3 @@ require("monitors")
 require("keybinds")
 require("look")
 require("rules")
-
--- HyprMod managed settings
-require("hyprland-gui")

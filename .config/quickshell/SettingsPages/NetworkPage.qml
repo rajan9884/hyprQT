@@ -4,6 +4,8 @@ import "../"
 
 Item {
     id: page
+    width: parent ? parent.width : 600
+    height: parent ? parent.height : 480
 
     // ── State ────────────────────────────────────────────────────
     property bool wifiEnabled: true
@@ -165,6 +167,34 @@ Item {
         pRadioSet.command = ["nmcli", "radio", "wifi", on ? "on" : "off"]
         pRadioSet.running = true
     }
+
+    // ── Wi-Fi rescan + auto-refresh ──
+    // `nmcli device wifi list` returns stale/empty data right after the
+    // panel opens (driver still scanning). Rescan on open + poll every
+    // 5s while the panel is mounted so reopening always fills in.
+    Process {
+        id: pRescan
+        command: ["nmcli", "device", "wifi", "rescan"]
+        stdout: StdioCollector {}
+        stderr: StdioCollector {}
+        onExited: function(exitCode) { if (page.wifiEnabled && !pList.running) pList.running = true }
+    }
+    Timer {
+        id: wifiRefreshTimer
+        interval: 5000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: { if (page.wifiEnabled && !pList.running) pList.running = true }
+    }
+    Timer {
+        id: wifiRescanTimer
+        interval: 15000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: { if (page.wifiEnabled && !pRescan.running) pRescan.running = true }
+    }
     Process {
         id: pList
         command: ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"]
@@ -251,8 +281,18 @@ Item {
 
     Component.onCompleted: {
         pRadioGet.running = true
-        pList.running = true
         pEthernet.running = true
+        // kick a rescan first — the list right after open is usually stale
+        pRescan.running = true
+        pList.running = true
+    }
+
+    // Called by NetworkPanel.qml every time the panel opens.
+    function refresh() {
+        pRadioGet.running = true
+        pEthernet.running = true
+        if (!pRescan.running) pRescan.running = true
+        if (!pList.running) pList.running = true
     }
 
     Column {

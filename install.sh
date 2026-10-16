@@ -33,13 +33,11 @@ BACKUP_DIR="$BACKUP_ROOT/$TIMESTAMP"
 # Files written by theme.py at runtime. These are copied once (so they
 # exist before the first boot), 
 GENERATED_FILES=(
-    "kitty/matugen.conf"
     "hypr/hyprlock-colors.conf"
     "gtk-3.0/colors.css"
     "gtk-4.0/colors.css"
     "gtk-3.0/settings.ini"
     "gtk-4.0/settings.ini"
-    "rofi/colors.rasi"
     "quickshell/Theme.qml"
 )
 # --------------------------------------------------

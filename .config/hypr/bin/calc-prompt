@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# calc-prompt — rofi calculator with the original 420x290 theme:
+# type expression, Enter copies result.
+# Uses qalc (libqalculate) with python3 fallback.
+set -uo pipefail
+
+expr=$(printf "" | rofi -dmenu -p "calc> ") || exit 0
+[ -z "${expr:-}" ] && exit 0
+# strip leading '=' like the old QML launcher (=2+2)
+expr="${expr#=}"
+expr="$(printf '%s' "$expr" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+[ -z "$expr" ] && exit 0
+
+result=""
+if command -v qalc >/dev/null 2>&1; then
+    result=$(qalc -t "$expr" 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | head -n 1)
+fi
+if [ -z "$result" ] && command -v python3 >/dev/null 2>&1; then
+    result=$(python3 -c "print($expr)" 2>/dev/null)
+fi
+if [ -z "$result" ]; then
+    notify-send "calc" "could not evaluate: $expr" 2>/dev/null || true
+    exit 1
+fi
+printf '%s' "$result" | wl-copy
+notify-send "calc" "$expr = $result  (copied)" 2>/dev/null || true

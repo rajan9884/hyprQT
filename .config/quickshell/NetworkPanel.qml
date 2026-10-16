@@ -17,11 +17,22 @@ Scope {
         if (showing) {
             unmountTimer.stop()
             mounted = true
+            // Loader item appears a frame after mount — refresh once ready
+            refreshTimer.restart()
         } else {
+            refreshTimer.stop()
             unmountTimer.restart()
         }
     }
     Timer { id: unmountTimer; interval: 200; onTriggered: root.mounted = false }
+    Timer {
+        id: refreshTimer
+        interval: 350
+        repeat: false
+        onTriggered: {
+            if (pageLoader.item && pageLoader.item.refresh) pageLoader.item.refresh()
+        }
+    }
 
     function openMenu() {
         var mon = Hyprland.focusedMonitor
@@ -115,6 +126,7 @@ Scope {
                             Loader {
                                 id: pageLoader
                                 width: pageFlick.width
+                                height: pageFlick.height
                                 source: "SettingsPages/NetworkPage.qml"
                             }
                         }

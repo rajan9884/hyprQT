@@ -10,10 +10,15 @@ hl.config({
             bottom = 8,
             left = 8,
         },
-        border_size = 0,
+        border_size = 2,
         resize_on_border = true,
         allow_tearing = false,
         layout = "dwindle",
+        col = {
+            -- subtle light borders so SUPER+arrows focus jumps are visible
+            active_border = "rgba(d8d8d8ff)",
+            inactive_border = "rgba(5a5a5a99)",
+        },
     },
     decoration = {
         rounding = 8,

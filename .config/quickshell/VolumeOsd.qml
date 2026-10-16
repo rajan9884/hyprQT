@@ -27,8 +27,8 @@ Scope {
         }
     }
 
-    // ---- constants / specs -----------------------------------------------
-    readonly property int topGap: 30
+    // OSD sits at the bottom of the screen (above the bar area).
+    readonly property int bottomGap: 110
     readonly property int keepVisible: 40
     readonly property int toolsHeight: 22
 
@@ -100,13 +100,6 @@ Scope {
     readonly property color cardColor: Qt.rgba(Theme.bg.r, Theme.bg.g, Theme.bg.b, bgOpacity / 100)
     readonly property real curX: showMedia ? offsetX : volOffsetX
     readonly property real curY: showMedia ? offsetY : volOffsetY
-
-    readonly property bool mediaMoved: offsetX !== 0 || offsetY !== 0
-
-    readonly property bool modified:
-        posKeys.some(k => root[k] !== 0)
-        || numKeys.some(k => root[k] !== numSpec[k].def)
-        || boolKeys.some(k => root[k] !== boolDefaults[k])
 
     readonly property string statePath: Quickshell.env("HOME") + "/.config/quickshell/state/mediaosd-state.json"
 
@@ -247,7 +240,6 @@ Scope {
     property bool showing: false
     property bool showMedia: false
     property bool pendingShow: false
-    property bool settingsOpen: false
     property bool dragging: false
     property bool pinned: false
     property bool hovered: false     // driven by a Binding inside the OSD window
@@ -262,7 +254,7 @@ Scope {
         id: hideTimer
         interval: root.showMedia ? root.mediaTimeout : root.volTimeout
         onTriggered: {
-            if (root.hovered || root.settingsOpen || root.dragging || (root.showMedia && root.pinned))
+            if (root.hovered || root.dragging || (root.showMedia && root.pinned))
                 hideTimer.restart()
             else
                 root.showing = false
@@ -293,34 +285,12 @@ Scope {
             showMediaOsd()
     }
 
-    function openSettings() {
-        pendingShow = false
-        settingsOpen = true
-        showMedia = true
-        showing = true
-        hideTimer.restart()
-    }
-
-    function closeSettings() {
-        settingsOpen = false
-        dragging = false
-        hideTimer.restart()
-    }
-
-    function toggleSettings() {
-        if (settingsOpen)
-            closeSettings()
-        else
-            openSettings()
-    }
-
     function togglePinned() {
         pinned = !pinned
         hideTimer.restart()
     }
 
     function closeAll() {
-        settingsOpen = false
         dragging = false
         showing = false
     }
@@ -340,7 +310,6 @@ Scope {
             mounted = true
         } else {
             showMedia = false
-            settingsOpen = false
             dragging = false
             pinned = false
             unmountTimer.restart()
@@ -357,22 +326,12 @@ Scope {
     IpcHandler {
         target: "mediaosd"
         function media(): void { root.triggerMediaOsd() }
-        function settings(): void { root.openSettings() }
         function hide(): void { root.closeAll() }
     }
 
-    // ---- settings helpers --------------------------------------------------
+    // ---- position/state helpers (drag handle + state file) ------------------
     function clamp(v, lo, hi) {
         return Math.max(lo, Math.min(hi, Math.round(v)))
-    }
-
-    function fmtValue(key, v) {
-        var s = numSpec[key]
-        if (s.unit === "s")
-            return (v / 1000).toFixed(1) + "s"
-        if (s.full && v >= s.max)
-            return "full"
-        return v + s.unit
     }
 
     // Only called while the user drags the handle. Saved offsets are never
@@ -384,8 +343,9 @@ Scope {
         if (winW > 0 && winH > 0 && hitW > 0) {
             var minX = keepVisible - winW / 2 - hitW / 2
             var maxX = winW / 2 - keepVisible + hitW / 2
-            var minY = -topGap
-            var maxY = Math.max(minY, winH - keepVisible - topGap)
+            // Bottom-anchored card: dragging down (+y) eats bottomGap.
+            var minY = -(winH - keepVisible - bottomGap)
+            var maxY = Math.max(minY, bottomGap - keepVisible)
             nx = Math.max(minX, Math.min(maxX, x))
             ny = Math.max(minY, Math.min(maxY, y))
         }
@@ -406,23 +366,6 @@ Scope {
             volOffsetX = 0
             volOffsetY = 0
         }
-        saveState()
-    }
-
-    function setNumber(key, v) {
-        var s = numSpec[key]
-        root[key] = clamp(v, s.min, s.max)
-    }
-
-    function toggleSetting(key) {
-        root[key] = !root[key]
-        saveState()
-    }
-
-    function resetAll() {
-        posKeys.forEach(function (k) { root[k] = 0 })
-        numKeys.forEach(function (k) { root[k] = numSpec[k].def })
-        boolKeys.forEach(function (k) { root[k] = boolDefaults[k] })
         saveState()
     }
 
@@ -620,8 +563,10 @@ Scope {
                     id: hitbox
                     width: win.activeCard.width * root.scaleFactor
                     height: (win.activeCard.height + root.toolsHeight) * root.scaleFactor
-                    x: (scene.width - width) / 2 + root.curX
-                    y: root.topGap + root.curY
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenterOffset: root.curX
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: root.bottomGap - root.curY - root.toolsHeight * root.scaleFactor
 
                     onWidthChanged: root.hitW = width
                     Component.onCompleted: root.hitW = width
@@ -634,61 +579,61 @@ Scope {
                     yOffset: root.volOffsetY
                     open: win.reveal && root.showing && !root.showMedia
                     width: root.flyoutWidth
-                    height: 28
-                    radius: 36
+                    height: 56
+                    radius: 20
 
                     HoverHandler {
                         id: flyoutHover
                         enabled: flyout.open
                     }
 
-                    Text {
-                        id: icon
+                    // Same layout/typography as SysOsd (brightness): title | bar | value.
+                    Row {
                         anchors.left: parent.left
-                        anchors.leftMargin: 20
+                        anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: 20
+                        anchors.rightMargin: 20
+                        spacing: 12
 
-                        text: {
-                            if (root.muted)
-                                return "󰖁"
-                            if (root.volume <= 0)
-                                return "󰕿"
-                            if (root.volume < 0.5)
-                                return "󰖀"
-                            return "󰕾"
+                        Text {
+                            width: 118
+                            elide: Text.ElideRight
+                            verticalAlignment: Text.AlignVCenter
+                            text: "Volume"
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: Theme.text
                         }
 
-                        font.family: "Symbols Nerd Font"
-                        font.pixelSize: 20
-                        color: Theme.text
-                    }
+                        Item {
+                            width: parent.width - 118 - 52 - parent.spacing * 2
+                            height: 5
+                            anchors.verticalCenter: parent.verticalCenter
 
-                    Text {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 20
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.muted ? "Muted" : Math.round(root.volume * 100) + "%"
-                        font.pixelSize: 12
-                        font.bold: true
-                        color: Theme.text
-                    }
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 4
+                                color: Theme.alpha(Theme.text, 0.25)
+                            }
+                            Rectangle {
+                                visible: !root.muted
+                                width: parent.width * Math.min(root.volume, 1)
+                                height: parent.height
+                                radius: 4
+                                color: Theme.text
+                                Behavior on width { NumberAnimation { duration: 100 } }
+                            }
+                        }
 
-                    Rectangle {
-                        anchors.left: icon.right
-                        anchors.leftMargin: 15
-                        anchors.right: parent.right
-                        anchors.rightMargin: 68
-                        anchors.verticalCenter: parent.verticalCenter
-                        height: 5
-                        radius: 4
-                        color: "#555555"
-
-                        Rectangle {
-                            width: root.muted ? 0 : parent.width * Math.min(root.volume, 1)
-                            height: parent.height
-                            radius: 4
+                        Text {
+                            width: 52
+                            horizontalAlignment: Text.AlignRight
+                            verticalAlignment: Text.AlignVCenter
+                            text: root.muted ? "Muted" : Math.round(root.volume * 100) + "%"
+                            font.pixelSize: 12
+                            font.bold: true
                             color: Theme.text
-                            Behavior on width { NumberAnimation { duration: 100 } }
                         }
                     }
                 }
@@ -900,8 +845,8 @@ Scope {
                     height: root.toolsHeight
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.horizontalCenterOffset: root.curX
-                    anchors.top: parent.top
-                    anchors.topMargin: root.topGap + root.curY + win.activeCard.height * root.scaleFactor
+                    // Drag handle sits just below the (bottom-anchored) card.
+                    anchors.top: win.activeCard.bottom
                     transformOrigin: Item.Top
                     scale: root.scaleFactor
                     visible: opacity > 0
@@ -936,7 +881,7 @@ Scope {
 
                     FooterButton {
                         visible: root.showMedia
-                        anchors.right: settingsButton.left
+                        anchors.right: parent.right
                         anchors.rightMargin: 8
                         anchors.verticalCenter: parent.verticalCenter
                         width: 18; height: 18
@@ -946,265 +891,6 @@ Scope {
                         active: root.pinned
                         opacity: (hovered || root.pinned) ? 1 : 0.3
                         onClicked: root.togglePinned()
-                    }
-
-                    // Settings only cover the media popup now, so the button
-                    // is only shown on it.
-                    FooterButton {
-                        id: settingsButton
-                        visible: root.showMedia
-                        anchors.right: parent.right
-                        anchors.rightMargin: 8
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 18; height: 18
-                        color: "transparent"
-                        label: "󰒓"
-                        fontSize: 13
-                        active: root.settingsOpen
-                        opacity: (hovered || root.settingsOpen) ? 1 : 0.3
-                        onClicked: root.toggleSettings()
-                    }
-                }
-            }
-        }
-    }
-
-    // ---- settings window: only exists while settings are open -------------
-    // Fixed size on purpose: a window whose height is driven by its content
-    // gets resized right after creation, and the first frame can stay blank
-    // until the pointer enters. Content scrolls inside the Flickable instead.
-    LazyLoader {
-        active: root.settingsOpen
-
-        PanelWindow {
-            id: settingsWin
-
-            color: "transparent"
-            implicitWidth: 420
-            implicitHeight: Math.min(560, (screen?.height ?? 800) * 0.85)
-            exclusionMode: ExclusionMode.Ignore
-
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.namespace: "mediaosd-settings"
-            WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-
-            Rectangle {
-                anchors.fill: parent
-                radius: 20
-                color: Theme.bg
-                border.width: 1
-                border.color: Theme.alpha(Theme.text, 0.12)
-            }
-
-            FocusScope {
-                anchors.fill: parent
-                focus: true
-                Keys.onEscapePressed: root.closeSettings()
-
-                // header
-                Item {
-                    id: head
-                    anchors.top: parent.top
-                    width: parent.width
-                    height: 60
-
-                    Text {
-                        x: 20; y: 12
-                        text: "OSD settings"
-                        font.pixelSize: 15
-                        font.bold: true
-                        color: Theme.text
-                    }
-                    Text {
-                        x: 20; y: 34
-                        text: "Hover a popup and drag its handle to move it."
-                        font.pixelSize: 10
-                        color: Theme.textDim
-                    }
-                    Text {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 20
-                        y: 10
-                        width: 24; height: 24
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        text: "×"
-                        font.pixelSize: 22
-                        color: closeArea.containsMouse ? Theme.text : Theme.textDim
-                        MouseArea {
-                            id: closeArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: root.closeSettings()
-                        }
-                    }
-                }
-
-                // Everything below the header scrolls (mouse wheel, drag,
-                // or the scrollbar on the right edge).
-                Flickable {
-                    id: flick
-                    anchors.top: head.bottom
-                    anchors.topMargin: 4
-                    anchors.bottom: foot.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    contentWidth: width
-                    contentHeight: contentCol.height + 16
-                    clip: true
-                    flickableDirection: Flickable.VerticalFlick
-                    boundsBehavior: Flickable.StopAtBounds
-
-                    WheelHandler {
-                        onWheel: event => {
-                            var max = Math.max(0, flick.contentHeight - flick.height)
-                            flick.contentY = Math.max(0, Math.min(max, flick.contentY - event.angleDelta.y / 2))
-                        }
-                    }
-
-                    Column {
-                        id: contentCol
-                        x: 20
-                        width: flick.width - 48
-
-                        SectionHeader { text: "Global" }
-                        SliderRow { host: root; key: "osdScale"; label: "Scale" }
-
-                        SectionHeader { text: "Content" }
-                        ToggleRow { host: root; key: "showArt"; label: "Album art"; checked: root.showArt }
-                        ToggleRow { host: root; key: "showVisualizer"; label: "Visualizer"; checked: root.showVisualizer }
-
-                        SectionHeader { text: "Layout" }
-                        ToggleRow { host: root; key: "portrait"; label: "Portrait layout"; checked: root.portrait }
-                        ToggleRow {
-                            host: root
-                            key: "artistBelow"
-                            label: "Artist below title"
-                            checked: root.artistBelow || root.portrait
-                            enabled: !root.portrait
-                        }
-                        SliderRow {
-                            host: root
-                            key: root.portrait ? "portraitWidth" : "mediaWidth"
-                            label: "Width"
-                        }
-                        SliderRow {
-                            host: root
-                            key: "artSize"
-                            label: "Art size"
-                            enabled: root.showArt && !root.portrait
-                        }
-
-                        SectionHeader { text: "Visualizer" }
-                        SliderRow { host: root; key: "barCount"; label: "Bars"; enabled: root.showVisualizer }
-                        SliderRow { host: root; key: "barSpacing"; label: "Spacing"; enabled: root.showVisualizer }
-                        SliderRow { host: root; key: "barHeight"; label: "Height" }
-                        SliderRow { host: root; key: "barRadius"; label: "Round" }
-                        SliderRow { host: root; key: "barFps"; label: "Frame rate"; enabled: root.showVisualizer }
-
-                        SectionHeader { text: "Opacity" }
-                        SliderRow { host: root; key: "bgOpacity"; label: "Background" }
-                        SliderRow { host: root; key: "artOpacity"; label: "Album art"; enabled: root.showArt }
-                        SliderRow { host: root; key: "barOpacity"; label: "Bars / progress (played)" }
-                        SliderRow { host: root; key: "barDimOpacity"; label: "Bars / progress (remaining)" }
-
-                        SectionHeader { text: "Behavior" }
-                        ToggleRow { host: root; key: "musicOnly"; label: "Music players only"; checked: root.musicOnly }
-                        ToggleRow { host: root; key: "trackChangeOsd"; label: "Pop up on track change"; checked: root.trackChangeOsd }
-                        SliderRow { host: root; key: "mediaTimeout"; label: "Media hide after" }
-
-                        SectionHeader { text: "Volume popup" }
-                        SliderRow { host: root; key: "volTimeout"; label: "Volume hide after" }
-
-                        SectionHeader { text: "Position" }
-                        ActionButton {
-                            label: "Reset media position"
-                            enabled: root.mediaMoved
-                            onClicked: root.resetPos(true)
-                        }
-                    }
-                }
-
-                // The scrollbar sits outside the Flickable's content so it
-                // doesn't scroll away with it.
-                Rectangle {
-                    id: sbTrack
-                    visible: flick.contentHeight > flick.height
-                    x: flick.x + flick.width - 14
-                    y: flick.y
-                    width: 4
-                    height: flick.height
-                    radius: 2
-                    color: Theme.alpha(Theme.text, 0.08)
-                }
-
-                Rectangle {
-                    id: sbHandle
-                    visible: flick.contentHeight > flick.height
-                    x: flick.x + flick.width - 14
-                    width: 4
-                    radius: 2
-                    height: Math.max(24, flick.height * flick.visibleArea.heightRatio)
-                    y: flick.y + flick.visibleArea.yPosition * flick.height
-                    color: Theme.text
-                    opacity: (sbArea.containsMouse || sbArea.pressed || flick.moving) ? 0.7 : 0.3
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
-
-                    MouseArea {
-                        id: sbArea
-                        anchors.fill: parent
-                        anchors.margins: -5
-                        hoverEnabled: true
-
-                        // Not using drag.target: dragging would overwrite the
-                        // handle's y binding and it would stop following the
-                        // wheel afterwards. Drive contentY instead.
-                        property real grabY: 0
-
-                        onPressed: mouse => {
-                            grabY = mapToItem(flick, mouse.x, mouse.y).y
-                                - flick.visibleArea.yPosition * flick.height
-                        }
-                        onPositionChanged: mouse => {
-                            if (!pressed)
-                                return
-                            var span = flick.height - sbHandle.height
-                            if (span <= 0)
-                                return
-                            var ny = mapToItem(flick, mouse.x, mouse.y).y - grabY
-                            var r = Math.max(0, Math.min(1, ny / span))
-                            flick.contentY = r * (flick.contentHeight - flick.height)
-                        }
-                    }
-                }
-
-                // footer
-                Item {
-                    id: foot
-                    anchors.bottom: parent.bottom
-                    width: parent.width
-                    height: 58
-
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: Theme.alpha(Theme.text, 0.08)
-                    }
-
-                    ActionButton {
-                        x: 20
-                        anchors.verticalCenter: parent.verticalCenter
-                        label: "Reset all"
-                        enabled: root.modified
-                        onClicked: root.resetAll()
-                    }
-                    ActionButton {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 20
-                        anchors.verticalCenter: parent.verticalCenter
-                        label: "Done"
-                        primary: true
-                        onClicked: root.closeSettings()
                     }
                 }
             }
@@ -1221,9 +907,9 @@ Scope {
         color: host.cardColor
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.horizontalCenterOffset: xOffset
-        anchors.top: parent.top
-        anchors.topMargin: host.topGap + yOffset
-        transformOrigin: Item.Top
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: host.bottomGap - yOffset
+        transformOrigin: Item.Bottom
         opacity: open ? 1 : 0
         visible: opacity > 0
         scale: (open ? 1 : 0.9) * host.scaleFactor
@@ -1307,194 +993,4 @@ Scope {
         onDoubleClicked: host.resetPos(host.showMedia)
     }
 
-    component ActionButton: Rectangle {
-        id: ab
-        property string label: ""
-        property bool primary: false
-        signal clicked()
-
-        implicitWidth: abText.implicitWidth + 28
-        width: implicitWidth
-        height: 30
-        radius: 15
-        opacity: enabled ? 1 : 0.4
-        color: primary
-            ? Theme.accent
-            : Theme.alpha(Theme.text, abArea.containsMouse ? 0.18 : 0.1)
-        Behavior on color { ColorAnimation { duration: 120 } }
-
-        Text {
-            id: abText
-            anchors.centerIn: parent
-            text: ab.label
-            font.pixelSize: 11
-            font.bold: true
-            color: ab.primary ? Theme.bg : Theme.text
-        }
-
-        MouseArea {
-            id: abArea
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: ab.clicked()
-        }
-    }
-
-    component SectionHeader: Item {
-        property string text: ""
-        width: parent?.width ?? 0
-        height: 32
-
-        Text {
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 4
-            text: parent.text
-            font.pixelSize: 10
-            font.bold: true
-            font.letterSpacing: 1.2
-            font.capitalization: Font.AllUppercase
-            color: Theme.textDim
-        }
-    }
-
-    component ToggleRow: Item {
-        id: tr
-        property var host
-        property string key: ""
-        property string label: ""
-        property bool checked: false
-
-        width: parent?.width ?? 0
-        height: 34
-        opacity: enabled ? 1 : 0.4
-
-        Rectangle {
-            anchors.fill: parent
-            anchors.leftMargin: -8
-            anchors.rightMargin: -8
-            radius: 8
-            color: trArea.containsMouse && tr.enabled ? Theme.alpha(Theme.text, 0.06) : "transparent"
-        }
-
-        Text {
-            anchors.left: parent.left
-            anchors.right: sw.left
-            anchors.rightMargin: 12
-            anchors.verticalCenter: parent.verticalCenter
-            text: tr.label
-            elide: Text.ElideRight
-            font.pixelSize: 12
-            font.bold: true
-            color: Theme.text
-        }
-
-        Rectangle {
-            id: sw
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            width: 36; height: 20; radius: 10
-            color: tr.checked ? Theme.accent : "transparent"
-            border.width: 1
-            border.color: tr.checked ? Theme.accent : Theme.alpha(Theme.text, 0.3)
-            Behavior on color { ColorAnimation { duration: 150 } }
-
-            Rectangle {
-                width: 14; height: 14; radius: 7
-                anchors.verticalCenter: parent.verticalCenter
-                x: tr.checked ? parent.width - width - 3 : 3
-                color: tr.checked ? Theme.bg : Theme.text
-                Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-            }
-        }
-
-        MouseArea {
-            id: trArea
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: tr.host.toggleSetting(tr.key)
-        }
-    }
-
-    // Self-contained minimal slider (no external Slider.qml needed).
-    // Reads/writes a numSpec entry on the host and saves on release.
-    component SliderRow: Item {
-        id: sr
-        property var host
-        property string key: ""
-        property string label: ""
-
-        readonly property var spec: host.numSpec[key]
-        readonly property real ratio: Math.max(0, Math.min(1,
-            (host[key] - spec.min) / (spec.max - spec.min)))
-
-        width: parent?.width ?? 0
-        height: 44
-        opacity: enabled ? 1 : 0.4
-
-        Text {
-            anchors.left: parent.left
-            y: 6
-            text: sr.label
-            font.pixelSize: 12
-            font.bold: true
-            color: Theme.text
-        }
-
-        Text {
-            anchors.right: parent.right
-            y: 6
-            text: sr.host.fmtValue(sr.key, sr.host[sr.key])
-            font.pixelSize: 11
-            color: Theme.textDim
-        }
-
-        Rectangle {
-            id: track
-            anchors.left: parent.left
-            anchors.right: parent.right
-            y: 30
-            height: 4
-            radius: 2
-            color: Theme.alpha(Theme.text, 0.15)
-
-            Rectangle {
-                width: knob.x + knob.width / 2
-                height: parent.height
-                radius: 2
-                color: Theme.accent
-            }
-
-            Rectangle {
-                id: knob
-                width: 14
-                height: 14
-                radius: 7
-                anchors.verticalCenter: parent.verticalCenter
-                x: sr.ratio * (track.width - width)
-                color: Theme.text
-            }
-        }
-
-        MouseArea {
-            id: sliderArea
-            anchors.fill: parent
-            anchors.topMargin: 20
-            enabled: sr.enabled
-
-            function apply(mx) {
-                var usable = track.width - knob.width
-                if (usable <= 0)
-                    return
-                var r = Math.max(0, Math.min(1, (mx - knob.width / 2) / usable))
-                var s = sr.spec
-                sr.host.setNumber(sr.key,
-                    s.min + Math.round(r * (s.max - s.min) / s.step) * s.step)
-            }
-
-            onPressed: mouse => apply(mouse.x)
-            onPositionChanged: mouse => { if (pressed) apply(mouse.x) }
-            onReleased: sr.host.saveState()
-        }
-    }
 }
