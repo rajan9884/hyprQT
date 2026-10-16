@@ -1,0 +1,18 @@
+[credential]
+	helper = store
+
+[user]
+	name = Rajan
+	email = rajan.dev.jaiswal@gmail.com
+
+[init]
+	defaultBranch = main
+
+[color]
+	ui = auto
+
+[core]
+	editor = nvim
+
+[pull]
+	rebase = false

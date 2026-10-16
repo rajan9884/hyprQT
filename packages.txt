@@ -71,7 +71,15 @@ zsh-autosuggestions
 zsh-syntax-highlighting
 starship
 eza
+bat
+fzf
+zoxide
+atuin
+direnv
+yazi
+neovim
 foot
+alacritty
 libqalculate
 
 # --------------------------------------------------
@@ -152,3 +160,10 @@ curl
 unzip
 gum
 tesseract
+
+# --------------------------------------------------
+# Web apps (browser backends for webapp-install/launch)
+# --------------------------------------------------
+
+chromium
+helium-browser-bin

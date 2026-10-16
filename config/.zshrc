@@ -1,16 +1,55 @@
-eval "$(starship init zsh)"
+# ~/.zshrc — hyprQT dotfiles.
+#
+# Guarded tool inits: a missing tool is skipped silently, so the shell always
+# starts clean even mid-install (nothing here may error under `set -e`).
+
+# ── Prompt (starship, themed via ~/.config/theme) ──
+if command -v starship >/dev/null 2>&1; then eval "$(starship init zsh)"; fi
 
 # Hyprland launches GUI apps with cwd=/ — never start an interactive shell at /.
 [[ "$PWD" == "/" ]] && cd "$HOME" >/dev/null 2>&1 || true
 
+# ── Aliases ──
+alias ..="cd ../"
+alias ff="fzf --preview 'bat --color=always {}'"
+
 # Monochrome eza
 export EZA_COLORS="uu=bright-black:gu=bright-black:da=bright-black:ur=white:uw=bright-black:ux=white:ue=bright-black:gr=bright-black:gw=bright-black:gx=white:tr=bright-black:fi=white:di=bright-white:ln=bright-black:pi=bright-black:so=bright-black:bd=bright-black:cd=bright-black:or=bright-black:mi=bright-black:ex=white"
 
-alias ls='eza --icons'
-alias ll='eza -lah --icons --git'
-alias la='eza -a --icons'
-alias lt='eza --tree --icons'
+alias ls='eza --icons=auto'
+alias ll='eza -lah --icons=auto --git'
+alias la='eza -a --icons=auto'
+alias lt='eza --tree --icons=auto'
 
+# Dual-GitHub helpers: git-work / git-personal / git-whoami
+[ -f "$HOME/.config/shell/git-accounts.sh" ] && source "$HOME/.config/shell/git-accounts.sh"
+
+# ── Editor + fzf ──
+export EDITOR="nvim" VISUAL="nvim"
+export FZF_DEFAULT_OPTS="--height 90% --reverse --border"
+
+# ── Speed tools (zoxide/fzf/yazi/atuin/direnv) ──
+if command -v zoxide >/dev/null 2>&1; then eval "$(zoxide init zsh --cmd z)"; fi
+if [ -f /usr/share/fzf/key-bindings.zsh ]; then source /usr/share/fzf/key-bindings.zsh; fi
+if [ -f /usr/share/fzf/completion.zsh ]; then source /usr/share/fzf/completion.zsh; fi
+# Atuin owns Ctrl-R; fzf keeps Ctrl-T + Alt-C.
+if command -v atuin >/dev/null 2>&1; then eval "$(atuin init zsh --disable-up-arrow)"; fi
+if command -v direnv >/dev/null 2>&1; then eval "$(direnv hook zsh)"; fi
+
+# yazi: `y` cds into the directory you exit in
+y() {
+  local tmp="$(mktemp -t yazi-cwd.XXXXXX)"
+  command yazi "$@" --cwd-file="$tmp"
+  local cwd="$(cat -- "$tmp" 2>/dev/null)"
+  rm -f -- "$tmp"
+  [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && cd -- "$cwd"
+}
+
+# ~/.local/bin carries the repo helpers.
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH";; esac
+
+# Desktop info on login
+command -v fastfetch >/dev/null 2>&1 && fastfetch
 
 # --------------------------------------------------
 # Completion
@@ -40,18 +79,17 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
 # --------------------------------------------------
 
 HISTFILE="$HOME/.zsh_history"
-HISTSIZE=10000
-SAVEHIST=10000
-
-setopt APPEND_HISTORY
+HISTSIZE=100000
+SAVEHIST=100000
+setopt EXTENDED_HISTORY
 setopt SHARE_HISTORY
-setopt HIST_IGNORE_DUPS
-setopt HIST_IGNORE_SPACE
-setopt HIST_REDUCE_BLANKS
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_FIND_NO_DUPS
+setopt HIST_SAVE_NO_DUPS
 
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 
-# Syntax highlighting
+# Syntax highlighting (MUST be LAST plugin)
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Grayscale

@@ -5,6 +5,9 @@
 input  = "~/.config/theme/templates/foot.ini"
 output = "~/.config/foot/colors.ini"
 reload = ["python3", "~/.config/theme/bin/foot-live.py"]
+[alacritty]
+input  = "~/.config/theme/templates/alacritty.toml"
+output = "~/.config/alacritty/colors.toml"
 [hyprlock]
 input  = "~/.config/theme/templates/hyprlock-colors.conf"
 output = "~/.config/hypr/hyprlock-colors.conf"

@@ -161,6 +161,10 @@ SKIPPED_REAL_FILES=0
 while IFS= read -r -d '' src; do
     rel="${src#"$SRC"/}"
 
+    # Top-level dotfiles (.zshrc, .bashrc, ...) belong in $HOME, not
+    # ~/.config — install.sh links them explicitly; never link them here.
+    [[ "$rel" != */* && "$rel" == .* ]] && continue
+
     is_generated "$rel" && continue
 
     dest="$CONFIG_DIR/$rel"

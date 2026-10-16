@@ -241,6 +241,10 @@ BACKED_UP_COUNT=0
 while IFS= read -r -d '' src; do
     rel="${src#"$SRC"/}"
 
+    # Top-level dotfiles (.zshrc, .bashrc, .zprofile, .gitconfig) live in
+    # $HOME, not ~/.config — handled explicitly below.
+    [[ "$rel" != */* && "$rel" == .* ]] && continue
+
     is_generated "$rel" && continue
 
     dest="$CONFIG_DIR/$rel"
@@ -268,16 +272,19 @@ while IFS= read -r -d '' src; do
     fi
 done < <(find "$SRC" \( -type f -o -type l \) -not -path '*/.git/*' -print0)
 
-# ~/.zshrc is installed from config/.zshrc but lives outside ~/.config
-if [[ -f "$SRC/.zshrc" ]]; then
-    if [[ -e "$HOME/.zshrc" && ! -L "$HOME/.zshrc" ]]; then
-        mkdir -p "$BACKUP_DIR/home"
-        mv "$HOME/.zshrc" "$BACKUP_DIR/home/.zshrc"
-        BACKED_UP_COUNT=$((BACKED_UP_COUNT + 1))
+# Home dotfiles (config/.zshrc, .bashrc, .zprofile, .gitconfig) live in
+# $HOME, not ~/.config — link each explicitly.
+for dot in .zshrc .bashrc .zprofile .gitconfig; do
+    if [[ -f "$SRC/$dot" ]]; then
+        if [[ -e "$HOME/$dot" && ! -L "$HOME/$dot" ]]; then
+            mkdir -p "$BACKUP_DIR/home"
+            mv "$HOME/$dot" "$BACKUP_DIR/home/$dot"
+            BACKED_UP_COUNT=$((BACKED_UP_COUNT + 1))
+        fi
+        ln -sfn "$SRC/$dot" "$HOME/$dot"
+        success "Linked ~/$dot."
     fi
-    ln -sfn "$SRC/.zshrc" "$HOME/.zshrc"
-    success "Linked ~/.zshrc."
-fi
+done
 
 # ~/.local/bin helpers live in the repo at config/hypr/bin (portable, and
 # SRC only maps config -> ~/.config). Link each into ~/.local/bin so the

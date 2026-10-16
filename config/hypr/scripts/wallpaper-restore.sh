@@ -13,6 +13,9 @@ done
 
 awww img "$img" -t none
 
+# Keep the lock-screen background in sync (hyprlock reads it from the cache).
+cp -f "$img" "$HOME/.cache/hyprlock-bg.jpg" 2>/dev/null || true
+
 # Re-render all themed targets from the current palette and push live
 # Hyprland border colors (best-effort; keeps login consistent after reboot).
 python3 "$HOME/.config/theme/bin/theme.py" apply >/dev/null 2>&1 || true

@@ -16,6 +16,7 @@ MATUGEN_CFG = CFG / "matugen" / "config.toml"
 MATUGEN_OUT = CACHE / "matugen" / "semantic.json"
 PALETTE = CACHE / "palette.json"
 STATE = STATE_DIR / "state.json"
+LOCK_BG = Path(os.environ.get("XDG_CACHE_HOME", HOME / ".cache")) / "hyprlock-bg.jpg"
 
 # GTK theme names used when syncing light/dark.
 #   "auto" -> "Adwaita-dark" for dark if that theme is installed (Arch: the
@@ -399,6 +400,12 @@ def cmd_wallpaper(a):
         die(f"unsupported image type: {p.suffix}")
     if not os.access(p, os.R_OK):
         die(f"not readable: {p}")
+    # Stage the lock-screen background (hyprlock reads it from the cache).
+    try:
+        LOCK_BG.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(p, LOCK_BG)
+    except Exception as e:
+        warn(f"could not stage lock background: {e}")
     with lock():
         st = load_state()
         if not st.get("colorgen", True):

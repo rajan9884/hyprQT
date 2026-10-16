@@ -1,0 +1,40 @@
+# ~/.bashrc — hyprQT dotfiles.
+#
+# Guarded tool inits: a missing tool is skipped silently, so the shell always
+# starts clean even mid-install (nothing here may error).
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+# ── Aliases ──
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+alias ff="fzf --preview 'bat --color=always {}'"
+
+# Dual-GitHub helpers: git-work / git-personal / git-whoami
+[ -f "$HOME/.config/shell/git-accounts.sh" ] && source "$HOME/.config/shell/git-accounts.sh"
+
+# ── Editor + fzf ──
+export FZF_DEFAULT_OPTS="--height 90% --reverse --border"
+export EDITOR="nvim" VISUAL="nvim"
+
+# ── Speed tools (zoxide/fzf/yazi/atuin/direnv) ──
+if command -v zoxide >/dev/null 2>&1; then eval "$(zoxide init bash --cmd z)"; fi
+if [ -f /usr/share/fzf/key-bindings.bash ]; then source /usr/share/fzf/key-bindings.bash; fi
+if [ -f /usr/share/fzf/completion.bash ]; then source /usr/share/fzf/completion.bash; fi
+# Atuin owns Ctrl-R; fzf keeps Ctrl-T + Alt-C.
+if command -v atuin >/dev/null 2>&1; then eval "$(atuin init bash --disable-up-arrow)"; fi
+if command -v direnv >/dev/null 2>&1; then eval "$(direnv hook bash)"; fi
+if command -v starship >/dev/null 2>&1; then eval "$(starship init bash)"; fi
+
+# yazi: `y` cds into the directory you exit in
+y() {
+  local tmp="$(mktemp -t yazi-cwd.XXXXXX)"
+  command yazi "$@" --cwd-file="$tmp"
+  local cwd="$(cat -- "$tmp" 2>/dev/null)"
+  rm -f -- "$tmp"
+  [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && cd -- "$cwd"
+}
+
+# ~/.local/bin carries the repo helpers.
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
