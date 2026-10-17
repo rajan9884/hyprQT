@@ -30,15 +30,14 @@ BACKUP_ROOT="$HOME/.config-backups"
 TIMESTAMP="$(date '+%Y-%m-%d_%H-%M-%S')"
 BACKUP_DIR="$BACKUP_ROOT/$TIMESTAMP"
 
-# Files written by theme.py at runtime. These are copied once (so they
-# exist before the first boot), 
+# Files the theme pipeline MODIFIES through external tools, so they must be
+# real files, not symlinks: theme.py rewrites settings.ini, and gtk tools
+# nudge it too. Everything else is symlinked — the repo stays the only copy.
+# (colors.css, foot/colors.ini, hyprlock-colors.conf, rofi colors.rasi etc.
+#  are written by theme.py's targets.toml directly, no need to seed them.)
 GENERATED_FILES=(
-    "hypr/hyprlock-colors.conf"
-    "gtk-3.0/colors.css"
-    "gtk-4.0/colors.css"
     "gtk-3.0/settings.ini"
     "gtk-4.0/settings.ini"
-    "quickshell/Theme.qml"
 )
 # --------------------------------------------------
 # Colors / output
@@ -323,24 +322,24 @@ if [[ "$BACKED_UP_COUNT" -gt 0 ]]; then
     printf '  %s\n' "$BACKUP_DIR"
 fi
 
+# Thunar rewrites its accelerator map on exit, which would clobber the
+# custom Space-key preview binding. The repo copy is the source of truth,
+# so lock it read-only (git does not preserve permission bits).
+if [[ -f "$REPO_DIR/config/Thunar/accels.scm" ]]; then
+    chmod a-w "$REPO_DIR/config/Thunar/accels.scm"
+    success "Thunar accelerator map locked (config/Thunar/accels.scm)."
+fi
+
 # --------------------------------------------------
 # Papirus folder color
 # --------------------------------------------------
 
-if [[ -n "$AUR_HELPER" ]]; then
-    info "Installing Papirus folders..."
-
-    if "$AUR_HELPER" -S --needed --noconfirm papirus-folders; then
-        if papirus-folders -C white; then
-            success "Papirus folders set to white."
-        else
-            warning "papirus-folders was installed, but setting the folder color failed."
-        fi
+if command -v papirus-folders >/dev/null 2>&1; then
+    if papirus-folders -C white; then
+        success "Papirus folders set to white."
     else
-        warning "Failed to install papirus-folders."
+        warning "Failed to set the Papirus folder color."
     fi
-else
-    warning "No AUR helper available; skipping papirus-folders."
 fi
 
 # --------------------------------------------------

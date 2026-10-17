@@ -59,6 +59,9 @@ playerctl
 # Clipboard
 # --------------------------------------------------
 
+# wl-clipboard: SUPER+V paste into non-terminal apps; wtype types the
+# clip and paste into any app while SUPER is held.
+
 wl-clipboard
 wtype
 
@@ -138,8 +141,6 @@ fastfetch
 
 ttf-jetbrains-mono-nerd
 ttf-iosevka-nerd
-ttf-roboto-mono
-otf-font-awesome
 
 # --------------------------------------------------
 # App launcher (original rofi look)
@@ -154,9 +155,14 @@ rofi
 python
 jq
 curl
-unzip
 gum
 tesseract
+
+# --------------------------------------------------
+# System monitor (SUPER+CTRL+T)
+# --------------------------------------------------
+
+btop
 
 # --------------------------------------------------
 # Web apps (browser backends for webapp-install/launch)

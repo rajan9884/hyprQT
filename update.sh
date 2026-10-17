@@ -23,12 +23,8 @@ CONFIG_DIR="$HOME/.config"
 PACKAGE_FILE="$REPO_DIR/packages.txt"
 
 GENERATED_FILES=(
-    "hypr/hyprlock-colors.conf"
-    "gtk-3.0/colors.css"
-    "gtk-4.0/colors.css"
     "gtk-3.0/settings.ini"
     "gtk-4.0/settings.ini"
-    "quickshell/Theme.qml"
 )
 
 DRY_RUN=0
@@ -226,7 +222,7 @@ if [[ "$SKIP_THEME" -eq 1 ]]; then
 elif command -v python3 >/dev/null 2>&1; then
     info "Regenerating theme from current palette..."
     if python3 "$CONFIG_DIR/theme/bin/theme.py" apply; then
-        success "Theme regenerated and consumers reloaded (Kitty, Waybar)."
+        success "Theme regenerated and consumers reloaded (foot, cava, GTK, Hyprland borders)."
     else
         error "Theme regeneration failed, check the error above."
         exit 1
