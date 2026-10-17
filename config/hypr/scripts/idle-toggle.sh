@@ -5,8 +5,7 @@
 # Usage: idle-toggle.sh [toggle|on|off|status]
 set -euo pipefail
 refresh_bar() {
-    pkill -RTMIN+13 waybar 2>/dev/null || true
-    pkill -RTMIN+8 waybar 2>/dev/null || true
+    qs ipc call bar update 2>/dev/null || true
 }
 status() {
     if pgrep -x hypridle >/dev/null 2>&1; then

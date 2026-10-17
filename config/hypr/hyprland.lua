@@ -15,7 +15,7 @@ local home = os.getenv("HOME")
 hl.on("hyprland.start", function()
     -- hl.exec_cmd("dunst") replaced with quickshell
     -- Clipboard capture is owned by the quickshell clipboard plugin
-    -- (wl-paste --watch clipboard.py); no cliphist watchers here.
+    -- (wl-paste --watch clipboard.py); no external watchers here.
     hl.exec_cmd(home .. "/.config/hypr/scripts/portal-warmup.sh")
     hl.exec_cmd(home .. "/.local/bin/power-profiles watch")
     hl.exec_cmd("hypridle")

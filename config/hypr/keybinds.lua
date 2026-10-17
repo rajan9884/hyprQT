@@ -1,5 +1,5 @@
 -- ~/.config/hypr/keybinds.lua
--- Full keymap: old-arch port (minus waybar/mako/calc/voxtype) + quickshell panels.
+-- Full keymap: old-arch port (minus calc/voxtype) + quickshell panels.
 -- mainMod/terminal/browser/fileManager come from hyprland.lua.
 -- Remaps vs old-arch (documented, no silent drops):
 --   launcher: SUPER+Space/D/Q -> qs launcher (fuzzy + =calc)
@@ -10,7 +10,7 @@
 --   layout-toggle (was L): SUPER+ALT+L — SUPER+L stays theme light/dark
 --   night-light (was CTRL+N): SUPER+CTRL+SHIFT+N — CTRL+N stays network panel
 --   todo (was C): SUPER+ALT+T — SUPER+C/V/X are universal copy/paste/cut
---   clipboard: SUPER+SHIFT+V simple cliphist pipe (previous), SUPER+CTRL+V preview mgr
+--   clipboard: SUPER+SHIFT+V simple clipboard pipe (previous), SUPER+CTRL+V preview mgr
 --   xkblayout (was X): SUPER+CTRL+X — voxtype not installed
 --   40px CTRL+H/J/K/L resize dropped (minus/equal family covers it) — CTRL+H is HDR
 --   togglesplit (was J): SUPER+ALT+J — SUPER+J stays focus-down
@@ -19,7 +19,7 @@
 --   close-window on W dropped (W = wallpaper picker) — Q still closes
 --   lock: SUPER+CTRL+L — SUPER+TAB cycles workspaces (old-arch restore)
 --   workspace-cycle: SUPER+TAB next, SUPER+SHIFT+TAB prev, SUPER+CTRL+TAB former
---   XF86PowerOff -> quickshell powermenu (waybar script gone)
+--   XF86PowerOff -> quickshell powermenu
 
 local home = os.getenv("HOME")
 local scripts = home .. "/.config/hypr/scripts"
