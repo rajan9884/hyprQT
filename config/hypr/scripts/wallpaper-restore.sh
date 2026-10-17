@@ -19,3 +19,6 @@ cp -f "$img" "$HOME/.cache/hyprlock-bg.jpg" 2>/dev/null || true
 # Re-render all themed targets from the current palette and push live
 # Hyprland border colors (best-effort; keeps login consistent after reboot).
 python3 "$HOME/.config/theme/bin/theme.py" apply >/dev/null 2>&1 || true
+
+# Force helium browser to pick up the new theme on next launch.
+rm -f "$HOME/.config/helium-theme/Cached Theme.pak" 2>/dev/null || true

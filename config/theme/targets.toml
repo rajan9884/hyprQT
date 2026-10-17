@@ -35,3 +35,6 @@ reload = ["pkill", "-USR2", "-f", "-x", "cava"]
 [starship]
 input  = "~/.config/theme/templates/starship.toml"
 output = "~/.config/starship.toml"
+[helium]
+input  = "~/.config/theme/templates/helium-theme.json"
+output = "~/.config/helium-theme/manifest.json"
