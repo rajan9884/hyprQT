@@ -79,7 +79,6 @@ direnv
 yazi
 neovim
 foot
-alacritty
 libqalculate
 
 # --------------------------------------------------
@@ -106,7 +105,6 @@ adw-gtk-theme
 papirus-icon-theme
 gnome-themes-extra
 papirus-folders
-nwg-look
 
 # --------------------------------------------------
 # Media
@@ -118,7 +116,6 @@ mpv
 # System Monitoring / Hardware
 # --------------------------------------------------
 
-btop
 brightnessctl
 power-profiles-daemon
 

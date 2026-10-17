@@ -13,14 +13,11 @@ browser    = "brave"
 local home = os.getenv("HOME")
 
 hl.on("hyprland.start", function()
-    -- hl.exec_cmd("dunst") replaced with quickshell 
-    hl.exec_cmd("nm-applet")
+    -- hl.exec_cmd("dunst") replaced with quickshell
     -- Clipboard capture is owned by the quickshell clipboard plugin
     -- (wl-paste --watch clipboard.py); no cliphist watchers here.
-    hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
     hl.exec_cmd(home .. "/.config/hypr/scripts/portal-warmup.sh")
     hl.exec_cmd(home .. "/.local/bin/power-profiles watch")
-    hl.exec_cmd("thunar --daemon 2>/dev/null &")
     hl.exec_cmd("hypridle")
     hl.exec_cmd("sh -c 'B=$(cat \"${XDG_STATE_HOME:-$HOME/.local/state}/backlight\" 2>/dev/null); case \"$B\" in \"\"|*[!0-9]*) ;; *) brightnessctl -c backlight set \"$B\" >/dev/null 2>&1 || true;; esac'")
     hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme prefer-dark 2>/dev/null || true")

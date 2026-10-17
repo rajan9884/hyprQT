@@ -33,7 +33,7 @@ hl.bind(mainMod .. " + SHIFT + ALT + B", hl.dsp.exec_cmd(bin .. "/helium-browser
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("foot --working-directory " .. home .. " -e nvim"), { description = "Editor (nvim)" })
 hl.bind(mainMod .. " + ALT + Return", hl.dsp.exec_cmd("foot --working-directory " .. home .. " -e tmux"), { description = "Terminal (tmux)" })
 hl.bind(mainMod .. " + SHIFT + ALT + M", hl.dsp.exec_cmd("cliamp"), { description = "Music player (cliamp)" })
-hl.bind(mainMod .. " + CTRL + T", hl.dsp.exec_cmd("foot --working-directory " .. home .. " -e btop"), { description = "System monitor (btop)" })
+hl.bind(mainMod .. " + CTRL + T", hl.dsp.exec_cmd("foot --working-directory " .. home .. " -e btop"), { description = "System monitor" })
 hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd("foot --working-directory " .. home .. " -e nmtui"), { description = "Network connections" })
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(bin .. "/thunar-cwd"), { description = "File manager (cwd)" })
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd(bin .. "/thunar-cwd"), { description = "File manager (cwd)" })
@@ -197,7 +197,7 @@ local function send_shortcut_once(mods, key)
     end
 end
 local terminal_classes = {
-    "foot", "alacritty", "wezterm", "ghostty", "rio", "ptyxis",
+    "foot", "wezterm", "ghostty", "rio", "ptyxis",
     "konsole", "xfce4-terminal", "gnome-terminal", "gnome-console",
     "urxvt", "urxvtc", "xterm", "st",
 }

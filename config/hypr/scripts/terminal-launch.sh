@@ -49,7 +49,7 @@ if [[ ! -d "$dir" ]]; then
 	dir="$HOME"
 fi
 
-# Primary terminal from vars.lua (foot = lightest, alacritty = GPU).
-# Both accept --working-directory. Override: TERMINAL=alacritty.
+# Primary terminal from vars.lua (foot = lightest).
+# Override: TERMINAL=foot.
 TERM_BIN="${TERMINAL:-foot}"
 exec "$TERM_BIN" --working-directory "$dir"

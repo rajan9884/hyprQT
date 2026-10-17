@@ -5,9 +5,6 @@
 input  = "~/.config/theme/templates/foot.ini"
 output = "~/.config/foot/colors.ini"
 reload = ["python3", "~/.config/theme/bin/foot-live.py"]
-[alacritty]
-input  = "~/.config/theme/templates/alacritty.toml"
-output = "~/.config/alacritty/colors.toml"
 [hyprlock]
 input  = "~/.config/theme/templates/hyprlock-colors.conf"
 output = "~/.config/hypr/hyprlock-colors.conf"
@@ -23,14 +20,9 @@ output = "~/.cache/theme/quickshell-theme.json"
 [rofi]
 input  = "~/.config/theme/templates/rofi-colors.rasi"
 output = "~/.config/rofi/colors.rasi"
-[btop]
-input  = "~/.config/theme/templates/btop.theme"
-output = "~/.config/btop/themes/theme.theme"
-reload = ["pkill", "-USR2", "-x", "btop"]
 [cava]
 input  = "~/.config/theme/templates/cava-theme"
 output = "~/.config/cava/themes/theme"
-
 reload = ["pkill", "-USR2", "-f", "-x", "cava"]
 [starship]
 input  = "~/.config/theme/templates/starship.toml"
