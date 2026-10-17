@@ -24,6 +24,7 @@ hl.on("hyprland.start", function()
 
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("~/.config/hypr/scripts/wallpaper-restore.sh")
+    hl.exec_cmd("foot --app-id=fastfetch") -- foot opens zsh, .zshrc prints fastfetch
     hl.exec_cmd("sleep 2 && QSG_RENDER_LOOP=basic qs -n") -- -n: never start a 2nd bar
 end)
 

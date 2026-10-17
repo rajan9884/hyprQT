@@ -200,6 +200,8 @@ local terminal_classes = {
     "foot", "wezterm", "ghostty", "rio", "ptyxis",
     "konsole", "xfce4-terminal", "gnome-terminal", "gnome-console",
     "urxvt", "urxvtc", "xterm", "st",
+    -- foot instances with a custom --app-id are still terminals
+    "fastfetch", "text-preview",
 }
 local function active_window_is_terminal()
     local window = hl.get_active_window()
