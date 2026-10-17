@@ -12,7 +12,9 @@
 --   todo (was C): SUPER+ALT+T — SUPER+C/V/X are universal copy/paste/cut
 --   clipboard: SUPER+SHIFT+V simple clipboard pipe (previous), SUPER+CTRL+V preview mgr
 --   xkblayout (was X): SUPER+CTRL+X — voxtype not installed
---   40px CTRL+H/J/K/L resize dropped (minus/equal family covers it) — CTRL+H is HDR
+--   40px CTRL+H/J/K/L resize dropped (no replacement) — CTRL+H is HDR
+--   monitor scaling (was SLASH): SUPER+EQUAL up, SUPER+MINUS down —
+--     SLASH stays cheatsheet (was double-bound: scaling AND cheatsheet)
 --   togglesplit (was J): SUPER+ALT+J — SUPER+J stays focus-down
 --   recorder: SUPER+R = wf-recorder region toggle (gpu-screen-recorder absent)
 --   random wallpaper (was R): SUPER+ALT+R
@@ -118,8 +120,8 @@ hl.bind(mainMod .. " + Home", hl.dsp.exec_cmd(scripts .. "/window-size-save.sh r
 hl.bind(mainMod .. " + ALT + Home", hl.dsp.exec_cmd(scripts .. "/window-size-save.sh save"), { description = "Save window size" })
 hl.bind(mainMod .. " + BACKSPACE", hl.dsp.exec_cmd(scripts .. "/window-transparency-toggle.sh"), { description = "Toggle window transparency" })
 hl.bind(mainMod .. " + SHIFT + BACKSPACE", hl.dsp.exec_cmd(scripts .. "/window-gaps-toggle.sh"), { description = "Toggle window gaps" })
-hl.bind(mainMod .. " + SLASH", hl.dsp.exec_cmd(scripts .. "/monitor-scaling.sh up"), { description = "Monitor scaling up" })
-hl.bind(mainMod .. " + ALT + SLASH", hl.dsp.exec_cmd(scripts .. "/monitor-scaling.sh down"), { description = "Monitor scaling down" })
+hl.bind(mainMod .. " + EQUAL", hl.dsp.exec_cmd(scripts .. "/monitor-scaling.sh up"), { description = "Monitor scaling up" })
+hl.bind(mainMod .. " + MINUS", hl.dsp.exec_cmd(scripts .. "/monitor-scaling.sh down"), { description = "Monitor scaling down" })
 hl.bind("CTRL + ALT + DELETE", hl.dsp.exec_cmd(bin .. "/window-close-all"), { locked = true, description = "Close all windows" })
 
 -- ── Toggles ──
