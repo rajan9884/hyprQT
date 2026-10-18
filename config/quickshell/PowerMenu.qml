@@ -238,6 +238,10 @@ Scope {
         id: stateFile
         path: root.statePath
         printErrors: false
+        // Pick up opacity-apply.sh's external rewrite live (saves here are
+        // interaction-only, so watching cannot loop).
+        watchChanges: true
+        onFileChanged: reload()
 
         onLoaded: {
             try {

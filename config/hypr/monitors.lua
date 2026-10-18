@@ -11,8 +11,27 @@
 -- hl.monitor({ output = "eDP-1", disabled = true })
 -- hl.monitor({ output = "HDMI-A-1", mode = "preferred", position = "auto", scale = 1 })
 
--- 3. Extend / Auto (Samsung eDP-1 2880x1800@90 OLED needs scale 2, otherwise apps look tiny)
-hl.monitor({ output = "eDP-1", mode = "2880x1800@90", position = "0x0", scale = 2 })
+-- 3. Extend / Auto (Samsung ATNA40YK11-0 OLED: 2880x1800@90 needs scale 2,
+--    otherwise apps look tiny)
+-- HDR state lives in ~/.cache/hypr-hdr-state ("hdr"/"sdr"), written only by
+-- scripts/hdr-toggle.sh. Wallpaper switches run `hyprctl reload`, which
+-- re-applies this file — reading the state here keeps the keybind as the
+-- only thing that flips HDR. Default when the file is absent: hdr.
+local _hdr_state_file = (os.getenv("HOME") or "") .. "/.cache/hypr-hdr-state"
+local _hdr_on = true
+do
+    local _f = io.open(_hdr_state_file, "r")
+    if _f then
+        local _s = _f:read("*l") or ""
+        _f:close()
+        _hdr_on = (_s ~= "sdr")
+    end
+end
+if _hdr_on then
+    hl.monitor({ output = "eDP-1", mode = "2880x1800@90", position = "0x0", scale = 2, bitdepth = 10, cm = "hdr", supports_hdr = 1, supports_wide_color = 1 })
+else
+    hl.monitor({ output = "eDP-1", mode = "2880x1800@90", position = "0x0", scale = 2, bitdepth = 8, cm = "srgb" })
+end
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 }) 
 
 -- 4. Duplicate

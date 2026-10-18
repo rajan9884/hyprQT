@@ -3,6 +3,8 @@
 -- mainMod/terminal/browser/fileManager come from hyprland.lua.
 -- Remaps vs old-arch (documented, no silent drops):
 --   launcher: SUPER+Space/D/Q -> qs launcher (fuzzy + =calc)
+--   calculator: SUPER+CTRL+Q -> qs launcher calc (rofi calc replaced)
+--   opacity menu: SUPER+O -> qs opacity menu (rofi dmenu replaced)
 --   float-toggle: SUPER+ALT+Space — SUPER+CTRL+Space is wallpaper picker
 --   close window: SUPER+W (SUPER+Q freed)
 --   scratchpad: SUPER+S toggle, SUPER+CTRL+S + SUPER+ALT+S send,
@@ -13,15 +15,18 @@
 --   clipboard: SUPER+SHIFT+V simple clipboard pipe (previous), SUPER+CTRL+V preview mgr
 --   xkblayout (was X): SUPER+CTRL+X — voxtype not installed
 --   40px CTRL+H/J/K/L resize dropped (no replacement) — CTRL+H is HDR
---   monitor scaling (was SLASH): SUPER+EQUAL up, SUPER+MINUS down —
---     SLASH stays cheatsheet (was double-bound: scaling AND cheatsheet)
+--   monitor scaling removed: SUPER+EQUAL/MINUS are window resize only
+--     (scaling fired alongside resize and popped a notification)
 --   togglesplit (was J): SUPER+ALT+J — SUPER+J stays focus-down
---   recorder: SUPER+R = wf-recorder region toggle (gpu-screen-recorder absent)
---   random wallpaper (was R): SUPER+ALT+R
+--   focus up (was K): SUPER+ALT+K — SUPER+K is cheatsheet (was double-bound)
+--   recorder (was R): SUPER+ALT+R
+--   random wallpaper (was ALT+R): SUPER+R
 --   close-window on W dropped (W = wallpaper picker) — Q still closes
 --   lock: SUPER+CTRL+L — SUPER+TAB cycles workspaces (old-arch restore)
 --   workspace-cycle: SUPER+TAB next, SUPER+SHIFT+TAB prev, SUPER+CTRL+TAB former
+--   toggle lock: idle-lock toggle SUPER+CTRL+I; bar caffeine icon same action
 --   XF86PowerOff -> quickshell powermenu
+--   battery icon click -> Settings POWER page (power profiles)
 
 local home = os.getenv("HOME")
 local scripts = home .. "/.config/hypr/scripts"
@@ -36,15 +41,15 @@ hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("foot --working-directory " .
 hl.bind(mainMod .. " + ALT + Return", hl.dsp.exec_cmd("foot --working-directory " .. home .. " -e tmux"), { description = "Terminal (tmux)" })
 hl.bind(mainMod .. " + SHIFT + ALT + M", hl.dsp.exec_cmd("cliamp"), { description = "Music player (cliamp)" })
 hl.bind(mainMod .. " + CTRL + T", hl.dsp.exec_cmd("foot --working-directory " .. home .. " -e btop"), { description = "System monitor" })
-hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd("foot --working-directory " .. home .. " -e nmtui"), { description = "Network connections" })
+hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd("qs ipc call network toggle"), { description = "Network panel" })
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(bin .. "/thunar-cwd"), { description = "File manager (cwd)" })
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd(bin .. "/thunar-cwd"), { description = "File manager (cwd)" })
 hl.bind(mainMod .. " + SHIFT + ALT + F", hl.dsp.exec_cmd(bin .. "/thunar-cwd"), { description = "File manager (cwd)" })
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser), { description = "Open browser (brave)" })
 
--- ── Launcher (original rofi drun, 420x290 theme) ──
-hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("pgrep -x rofi >/dev/null && pkill -x rofi || rofi -show drun"), { description = "App launcher" })
-hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("pgrep -x rofi >/dev/null && pkill -x rofi || rofi -show drun"), { description = "App launcher" })
+-- ── Launcher (quickshell: fuzzy apps + =calc) ──
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("qs ipc call launcher toggle"), { description = "App launcher" })
+hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("qs ipc call launcher toggle"), { description = "App launcher" })
 
 -- ── Quickshell ──
 hl.bind("ALT + S", hl.dsp.exec_cmd("qs ipc call wheel toggle"), { description = "Wheel launcher" })
@@ -60,13 +65,13 @@ hl.bind(mainMod .. " + CTRL + SHIFT + Space", hl.dsp.exec_cmd("qs ipc call theme
 hl.bind(mainMod .. " + CTRL + Space", hl.dsp.exec_cmd("qs -n -p ~/.config/quickshell/hyprquickpaper"), { description = "Wallpaper picker" })
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = 0 }), { description = "Toggle fullscreen" })
 hl.bind(mainMod .. " + ALT + F", hl.dsp.window.fullscreen({ mode = "maximized" }), { description = "Maximize window" })
-hl.bind(mainMod .. " + O", hl.dsp.exec_cmd(scripts .. "/opacity.sh"), { description = "Opacity menu (100/90/80/70/60/50/40)" })
+hl.bind(mainMod .. " + O", hl.dsp.exec_cmd("qs ipc call opacity toggle"), { description = "Opacity menu (100/90/80/70/60/50/40)" })
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("python3 " .. home .. "/.config/theme/bin/theme.py toggle"), { description = "Light/dark theme" })
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call notifications toggle"), { description = "Notifications" })
 hl.bind("SUPER + comma", hl.dsp.exec_cmd("qs ipc call notifications dismiss"), { locked = true, description = "Dismiss notification" })
 hl.bind("SUPER + CTRL + comma", hl.dsp.exec_cmd("qs ipc call notifications dismissAll"), { locked = true, description = "Dismiss all notifications" })
 hl.bind("SUPER + SHIFT + comma", hl.dsp.exec_cmd("qs ipc call notifications dnd"), { locked = true, description = "Toggle notification silence" })
-hl.bind(mainMod .. " + ALT + T", hl.dsp.exec_cmd("qs ipc call todo toggle"), { description = "To-do list" })
+hl.bind(mainMod .. " + ALT + T", hl.dsp.exec_cmd("qs ipc call todo toggle"), { description = "Todo / notes panel (add, check off, clear done)" })
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("qs ipc call bar toggle"), { description = "Toggle bar" })
 
 -- ── Float toggle (old-arch SUPER+T) ──
@@ -120,8 +125,6 @@ hl.bind(mainMod .. " + Home", hl.dsp.exec_cmd(scripts .. "/window-size-save.sh r
 hl.bind(mainMod .. " + ALT + Home", hl.dsp.exec_cmd(scripts .. "/window-size-save.sh save"), { description = "Save window size" })
 hl.bind(mainMod .. " + BACKSPACE", hl.dsp.exec_cmd(scripts .. "/window-transparency-toggle.sh"), { description = "Toggle window transparency" })
 hl.bind(mainMod .. " + SHIFT + BACKSPACE", hl.dsp.exec_cmd(scripts .. "/window-gaps-toggle.sh"), { description = "Toggle window gaps" })
-hl.bind(mainMod .. " + EQUAL", hl.dsp.exec_cmd(scripts .. "/monitor-scaling.sh up"), { description = "Monitor scaling up" })
-hl.bind(mainMod .. " + MINUS", hl.dsp.exec_cmd(scripts .. "/monitor-scaling.sh down"), { description = "Monitor scaling down" })
 hl.bind("CTRL + ALT + DELETE", hl.dsp.exec_cmd(bin .. "/window-close-all"), { locked = true, description = "Close all windows" })
 
 -- ── Toggles ──
@@ -147,7 +150,7 @@ hl.bind(mainMod .. " + CTRL + BACKSPACE", function()
 end, { description = "Toggle single-window square aspect" })
 
 -- ── Wallpaper ──
-hl.bind(mainMod .. " + ALT + R", hl.dsp.exec_cmd(scripts .. "/random-wall.sh"), { description = "Random wallpaper" })
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(scripts .. "/random-wall.sh"), { description = "Random wallpaper" })
 
 -- ── Webapps ──
 hl.bind(mainMod .. " + ALT + SHIFT + W", hl.dsp.exec_cmd("qs ipc call webapps install"), { description = "Install web app" })
@@ -170,7 +173,7 @@ hl.bind(mainMod .. " + CTRL + SHIFT + equal", hl.dsp.window.resize({ x = 0, y = 
 -- ── Focus / move (vim-style) ──
 hl.bind(mainMod .. " + H", hl.dsp.focus({ direction = "left" }), { description = "Focus left" })
 hl.bind(mainMod .. " + J", hl.dsp.focus({ direction = "down" }), { description = "Focus down" })
-hl.bind(mainMod .. " + K", hl.dsp.focus({ direction = "up" }), { description = "Focus up" })
+hl.bind(mainMod .. " + ALT + K", hl.dsp.focus({ direction = "up" }), { description = "Focus up" })
 hl.bind(mainMod .. " + L", hl.dsp.focus({ direction = "right" }), { description = "Focus right" })
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }), { description = "Focus left" })
 hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }), { description = "Focus right" })
@@ -235,7 +238,7 @@ hl.bind("SUPER + A", hl.dsp.send_shortcut({ mods = "CTRL", key = "A" }), { descr
 hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("qs ipc call clipboard toggle"), { description = "Clipboard history" })
 
 -- ── Emoji / clipboard manager ──
-hl.bind(mainMod .. " + CTRL + Q", hl.dsp.exec_cmd(bin .. "/calc-prompt"), { description = "Calculator (type expr, Enter copies)" })
+hl.bind(mainMod .. " + CTRL + Q", hl.dsp.exec_cmd("qs ipc call launcher calc"), { description = "Calculator (=expr, Enter copies)" })
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs ipc call emoji toggle"), { description = "Emoji picker" })
 hl.bind(mainMod .. " + CTRL + E", hl.dsp.exec_cmd("qs ipc call emoji toggle"), { description = "Emoji picker" })
 hl.bind("SUPER + CTRL + V", hl.dsp.exec_cmd("qs ipc call clipboard toggle"), { description = "Clipboard history" })
@@ -251,8 +254,8 @@ hl.bind("SUPER + CTRL + Print", hl.dsp.exec_cmd(bin .. "/ocr-extract"), { descri
 hl.bind("Delete", hl.dsp.exec_cmd("sh -c 'mkdir -p " .. home .. "/Pictures/Screenshots; file=" .. home .. "/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png; grim \"$file\"; wl-copy < \"$file\"; notify-send -t 4000 \"Screenshot saved\" \"$file\"'"), { description = "Screenshot fullscreen" })
 hl.bind("SHIFT + Delete", hl.dsp.exec_cmd("sh -c 'mkdir -p " .. home .. "/Pictures/Screenshots; file=" .. home .. "/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png; grim -g \"$(slurp)\" \"$file\"; wl-copy < \"$file\"; notify-send -t 4000 \"Screenshot saved\" \"$file\"'"), { description = "Screenshot area" })
 
--- ── Recorder (wf-recorder region toggle) ──
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(scripts .. "/screen-record.sh"), { description = "Screen recording" })
+-- ── Recorder (wf-recorder region toggle; moved off SUPER+R for wallpaper) ──
+hl.bind(mainMod .. " + ALT + R", hl.dsp.exec_cmd(scripts .. "/screen-record.sh"), { description = "Screen recording" })
 
 -- ── Mouse ──
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true, description = "Drag window" })

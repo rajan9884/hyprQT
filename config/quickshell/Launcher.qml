@@ -6,8 +6,8 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 
 // App launcher with fuzzy matching + inline calc (=expr).
-// Replaces: rofi -show drun + rofi -show calc
-// IPC: qs ipc call launcher toggle|show|hide
+// Replaces: rofi -show drun + rofi -show calc (SUPER+CTRL+Q calc)
+// IPC: qs ipc call launcher toggle|show|hide|calc
 Scope {
     id: root
     property bool showing: false
@@ -16,17 +16,36 @@ Scope {
     property string query: ""
     property int selected: 0
     property string calcResult: ""
+    property string pendingQuery: ""
+    property bool calcMode: false
+    property real reveal: 0
+    Behavior on reveal { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
 
     onShowingChanged: {
-        if (showing) { unmountTimer.stop(); mounted = true; root.query = ""; root.selected = 0; root.calcResult = "" }
-        else unmountTimer.restart()
+        if (showing) {
+            unmountTimer.stop(); mounted = true; root.query = ""; root.selected = 0; root.calcResult = ""
+            startAvailScan()
+            openTimer.restart() // a few frames after mount so frame 1 renders hidden, then springs up
+        } else {
+            root.reveal = 0 // slide down first; window unmounts once the animation is done
+            root.calcMode = false
+            unmountTimer.restart()
+        }
     }
-    Timer { id: unmountTimer; interval: 200; onTriggered: root.mounted = false }
+    Timer { id: unmountTimer; interval: 300; onTriggered: root.mounted = false }
+    Timer { id: openTimer; interval: 80; onTriggered: root.reveal = 1 }
 
     function openMenu() {
         var mon = Hyprland.focusedMonitor
         if (mon) { var scr = Quickshell.screens.find(function(s) { return s.name === mon.name }); if (scr) root.targetScreen = scr }
+        root.calcMode = false
         root.showing = true
+    }
+    // Open with the calc line pre-filled (SUPER+CTRL+Q replacement of rofi calc)
+    function openCalc() {
+        root.pendingQuery = "="
+        root.openMenu()
+        root.calcMode = true
     }
     function closeMenu() { root.showing = false }
     function toggleMenu() { root.showing ? root.closeMenu() : root.openMenu() }
@@ -36,6 +55,7 @@ Scope {
         function toggle(): void { root.toggleMenu() }
         function show(): void { root.openMenu() }
         function hide(): void { root.closeMenu() }
+        function calc(): void { root.openCalc() }
     }
 
     // Fuzzy score: subsequence match, bonuses for prefix / consecutive / word-boundary
@@ -53,30 +73,107 @@ Scope {
     }
 
     property var filtered: {
+        var avail = root.avail           // dep: re-filter when the PATH probe lands
+        var availReady = root.availReady
         var q = root.query
+        if (root.calcMode) return []
         if (q.length > 0 && q[0] === "=") return []
-        var apps = DesktopEntries.applications.values.filter(function(a) { return !a.noDisplay && !a.hidden })
+        var apps = DesktopEntries.applications.values.filter(function(a) {
+            if (a.noDisplay || a.hidden) return false
+            // hide entries whose program is missing on PATH (TryExec re-check)
+            if (availReady) {
+                var prog = root.entryProgram(a)
+                if (prog && avail[prog] === false) return false
+            }
+            return true
+        })
         var scored = []
         for (var i = 0; i < apps.length; i++) {
             var s = root.fuzzyScore(apps[i].name + " " + (apps[i].genericName || "") + " " + (apps[i].execString || ""), q)
             if (s >= 0) scored.push({ app: apps[i], score: s })
         }
-        scored.sort(function(a, b) { return b.score - a.score })
-        return scored.slice(0, 12).map(function(x) { return x.app })
+        // empty query: pure alphabetical list; with a query: rank by score, tie-break A→Z
+        var byName = function(a, b) {
+            return a.app.name.toLowerCase().localeCompare(b.app.name.toLowerCase())
+        }
+        if (q.length === 0) scored.sort(byName)
+        else scored.sort(function(a, b) { return b.score - a.score || byName(a, b) })
+        // no cap: a slice(0,30) dropped tail-of-alphabet apps (Zed, Zen, ...)
+        // from the model entirely — unscrollable, only findable by search
+        return scored.map(function(x) { return x.app })
     }
 
     Process { id: calcProc }
     function runCalc(expr) {
+        if (expr.replace(/[\s=]/g, "") === "") { root.calcResult = ""; return }
         calcProc.command = ["sh", "-c", "qalc '" + expr.replace(/'/g, "'\\''") + "' 2>/dev/null | head -n 1 || python3 -c \"print(" + expr.replace(/"/g, '\\"') + ")\" 2>/dev/null || echo error"]
         calcProc.running = true
     }
 
+    // ---- missing-binary filter ------------------------------------------
+    // quickshell's DesktopEntry exposes neither TryExec nor a validity flag, so a
+    // .desktop whose binary is absent (e.g. a Claude entry migrated from Void)
+    // still lists and then silently fails to launch. Re-honour TryExec here: on
+    // each open we probe every distinct program once with `command -v` and drop
+    // entries whose program isn't on PATH.
+    property var avail: ({})        // program -> true (exists) / false (missing)
+    property bool availReady: false
+
+    function entryProgram(app) {
+        // Prefer the parsed command's argv[0]; fall back to execString.
+        var cmd = (app.command && app.command.length) ? app.command[0] : (app.execString || "")
+        return (cmd.split(" ")[0] || "").trim()
+    }
+
+    function startAvailScan() {
+        var apps = DesktopEntries.applications.values
+        var seen = {}, progs = [], i
+        for (i = 0; i < apps.length; i++) {
+            var p = entryProgram(apps[i])
+            if (!p) continue
+            if (p.indexOf("/") >= 0) { avail[p] = true; continue }  // absolute path → trust it
+            if (seen[p]) continue
+            seen[p] = true; progs.push(p)
+        }
+        avail = Object.assign({}, avail)
+        availReady = false
+        if (progs.length === 0) { availReady = true; return }
+        availProc.command = ["sh", "-c", "for p in " + progs.map(function(s){ return "'" + s.replace(/'/g, "'\\''") + "'" }).join(" ") + "; do command -v \"$p\" >/dev/null 2>&1 && echo \"$p\"; done"]
+        availProc.running = true
+    }
+
+    Process {
+        id: availProc
+        stdout: StdioCollector { id: availOut }
+        onExited: function() {
+            var printed = {}
+            availOut.text.trim().split("\n").forEach(function(l) { if (l) printed[l] = true })
+            // bare names not printed by `command -v` are missing → false;
+            // absolute paths were pre-marked true and are left alone.
+            var next = {}
+            for (var k in root.avail) next[k] = root.avail[k]
+            var apps = DesktopEntries.applications.values
+            for (var i = 0; i < apps.length; i++) {
+                var prog = entryProgram(apps[i])
+                if (!prog || prog.indexOf("/") >= 0) continue
+                next[prog] = printed[prog] === true
+            }
+            root.avail = next
+            root.availReady = true
+        }
+    }
+
     function launchCurrent() {
-        if (root.query.length > 0 && root.query[0] === "=") { Quickshell.execDetached(["sh", "-c", "echo -n '" + root.calcResult.replace(/'/g, "'\\''") + "' | wl-copy"]); root.closeMenu(); return }
+        if (root.calcMode || (root.query.length > 0 && root.query[0] === "=")) { Quickshell.execDetached(["sh", "-c", "echo -n '" + root.calcResult.replace(/'/g, "'\\''") + "' | wl-copy"]); root.closeMenu(); return }
         if (root.filtered.length === 0) return
         var app = root.filtered[Math.min(root.selected, root.filtered.length - 1)]
         root.closeMenu()
-        app.execute()
+        // app.execute() can fail to resolve PATH-only binaries (e.g. Electron
+        // apps like ChatGPT/Claude whose Exec is a bare command) under the
+        // shell PATH quickshell inherits. Run the parsed command array via
+        // execDetached instead — the same mechanism the Wheel launcher uses.
+        if (app.command && app.command.length > 0) Quickshell.execDetached({ command: app.command })
+        else app.execute()
     }
 
     LazyLoader {
@@ -96,16 +193,22 @@ Scope {
             Rectangle {
                 id: card
                 width: Math.min(560, parent.width - 80)
-                height: Math.min(480, parent.height - 80)
-                anchors.top: parent.top
-                anchors.topMargin: Math.max(80, parent.height * 0.18)
+                height: Math.min(480, parent.height - 140)
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 90
                 anchors.horizontalCenter: parent.horizontalCenter
                 radius: Theme.radius
                 color: Theme.bg
                 border.width: 1
                 border.color: Theme.accent
                 focus: true
-                Component.onCompleted: searchField.forceActiveFocus()
+                // Rises from below the bottom edge instead of dropping from the top
+                opacity: root.reveal
+                transform: Translate { y: (1 - root.reveal) * (card.height + 16) }
+                Component.onCompleted: {
+                    searchField.forceActiveFocus()
+                    if (root.pendingQuery !== "") { searchField.text = root.pendingQuery; root.pendingQuery = "" }
+                }
                 Keys.onEscapePressed: root.closeMenu()
                 Keys.onPressed: function(event) {
                     if (event.key === Qt.Key_Down) { if (root.filtered.length > 0) root.selected = (root.selected + 1) % root.filtered.length; event.accepted = true }
@@ -132,6 +235,8 @@ Scope {
                             Keys.onPressed: function(event) {
                                 if (event.key === Qt.Key_Down) { if (root.filtered.length > 0) root.selected = (root.selected + 1) % root.filtered.length; event.accepted = true }
                                 else if (event.key === Qt.Key_Up) { if (root.filtered.length > 0) root.selected = (root.selected - 1 + root.filtered.length) % root.filtered.length; event.accepted = true }
+                                else if (event.key === Qt.Key_PageDown) { if (root.filtered.length > 0) root.selected = Math.min(root.selected + 5, root.filtered.length - 1); event.accepted = true }
+                                else if (event.key === Qt.Key_PageUp) { if (root.filtered.length > 0) root.selected = Math.max(root.selected - 5, 0); event.accepted = true }
                                 else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) { root.launchCurrent(); event.accepted = true }
                                 else if (event.key === Qt.Key_Escape) { root.closeMenu(); event.accepted = true }
                             }
@@ -139,7 +244,7 @@ Scope {
                         Text {
                             anchors.fill: parent
                             visible: searchField.text === ""
-                            text: "Type to search apps...  (=2+2 calc)"
+                            text: "Type to search apps..."
                             color: Theme.textFaint
                             font.family: Theme.fontFamily
                             font.pixelSize: 15
@@ -147,7 +252,7 @@ Scope {
                     }
                     Rectangle { width: parent.width; height: 1; color: Theme.border }
                     Text {
-                        visible: root.query.length > 0 && root.query[0] === "="
+                        visible: root.calcMode || (root.query.length > 0 && root.query[0] === "=")
                         text: root.calcResult !== "" ? "= " + root.calcResult : "type expression, Enter copies"
                         color: Theme.accent
                         font.family: Theme.fontFamily
@@ -155,10 +260,15 @@ Scope {
                     }
                     ListView {
                         width: parent.width
-                        height: parent.height - searchField.height - 40
+                        height: parent.height - searchField.height - 44 - (root.calcMode ? 26 : 0)
                         clip: true
                         model: root.filtered
                         currentIndex: root.selected
+                        highlightFollowsCurrentItem: true
+                        // smooth the selection ride instead of snapping row-to-row
+                        highlightMoveDuration: 110
+                        // keep the selected row visible even when the model is re-filtered
+                        onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
                         delegate: Rectangle {
                             required property var modelData
                             required property int index
@@ -223,7 +333,7 @@ Scope {
                             MouseArea { anchors.fill: parent; onClicked: { root.selected = index; root.launchCurrent() } }
                         }
                     }
-                    Text { text: "fuzzy find · ↑↓ navigate · enter launch · =expr calc · esc close"; color: Theme.textFaint; font.family: Theme.fontFamily; font.pixelSize: 10 }
+                    Text { text: "fuzzy find · ↑↓ navigate · enter launch · esc close"; color: Theme.textFaint; font.family: Theme.fontFamily; font.pixelSize: 10 }
                 }
             }
         }

@@ -12,6 +12,10 @@ Scope {
     property bool showing: false
     property bool mounted: false
     property var targetScreen: Quickshell.screens[0]
+    // Set by the window's Component.onCompleted below — `pageLoader` lives
+    // inside the LazyLoader's nested component scope, which this root scope
+    // cannot see directly.
+    property var pageRef: null
 
     onShowingChanged: {
         if (showing) {
@@ -30,7 +34,8 @@ Scope {
         interval: 350
         repeat: false
         onTriggered: {
-            if (pageLoader.item && pageLoader.item.refresh) pageLoader.item.refresh()
+            var L = root.pageRef
+            if (L && L.item && L.item.refresh) L.item.refresh()
         }
     }
 
@@ -65,7 +70,10 @@ Scope {
             WlrLayershell.keyboardFocus: root.showing ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
             mask: Region { item: root.showing ? card : null }
 
-            Component.onCompleted: card.forceActiveFocus()
+            Component.onCompleted: {
+                card.forceActiveFocus()
+                root.pageRef = pageLoader
+            }
 
             MouseArea {
                 anchors.fill: parent
@@ -93,23 +101,14 @@ Scope {
                     anchors.fill: parent
                     anchors.margins: 20
                     spacing: 12
-                    Row {
+                    Text {
                         width: parent.width
-                        Text {
-                            width: parent.width - 40
-                            text: "NETWORK"
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 16
-                            font.bold: true
-                            font.letterSpacing: 3
-                        }
-                        Text {
-                            text: "×"
-                            color: Theme.textDim
-                            font.pixelSize: 18
-                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.closeMenu() }
-                        }
+                        text: "NETWORK"
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 16
+                        font.bold: true
+                        font.letterSpacing: 3
                     }
                     Rectangle { width: parent.width; height: 1; color: Theme.border }
                     Item {

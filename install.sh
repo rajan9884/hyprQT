@@ -33,7 +33,7 @@ BACKUP_DIR="$BACKUP_ROOT/$TIMESTAMP"
 # Files the theme pipeline MODIFIES through external tools, so they must be
 # real files, not symlinks: theme.py rewrites settings.ini, and gtk tools
 # nudge it too. Everything else is symlinked — the repo stays the only copy.
-# (colors.css, foot/colors.ini, hyprlock-colors.conf, rofi colors.rasi etc.
+# (colors.css, foot/colors.ini, hyprlock-colors.conf etc.
 #  are written by theme.py's targets.toml directly, no need to seed them.)
 GENERATED_FILES=(
     "gtk-3.0/settings.ini"

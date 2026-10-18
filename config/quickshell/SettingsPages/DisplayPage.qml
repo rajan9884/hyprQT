@@ -53,9 +53,9 @@ Item {
         const temp = nightlightTemperature(value)
         nightlightProcess.command = [
             "sh", "-c",
-            "pkill -x gammastep 2>/dev/null; " +
+            "pkill -x hyprsunset 2>/dev/null; " +
             "sleep " + delay + "; " +
-            "nohup gammastep -O " + temp + " >/dev/null 2>&1 &"
+            "nohup hyprsunset --temperature " + temp + " >/dev/null 2>&1 &"
         ]
         nightlightProcess.running = true
     }
@@ -64,7 +64,7 @@ Item {
 
     function nightlightOff() {
         nightlightEnabled = false
-        nightlightProcess.command = ["pkill", "-x", "gammastep"]
+        nightlightProcess.command = ["pkill", "-x", "hyprsunset"]
         nightlightProcess.running = true
     }
 
@@ -97,7 +97,7 @@ Item {
 
     Process {
         id: nightlightCheck
-        command: ["pgrep", "-x", "gammastep"]
+        command: ["pgrep", "-x", "hyprsunset"]
         onExited: exitCode => {
             page.nightlightEnabled = exitCode === 0
         }

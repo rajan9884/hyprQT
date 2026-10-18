@@ -17,9 +17,6 @@ output = "~/.config/gtk-4.0/colors.css"
 [quickshell]
 input  = "~/.config/theme/templates/quickshell-theme.json"
 output = "~/.cache/theme/quickshell-theme.json"
-[rofi]
-input  = "~/.config/theme/templates/rofi-colors.rasi"
-output = "~/.config/rofi/colors.rasi"
 [cava]
 input  = "~/.config/theme/templates/cava-theme"
 output = "~/.config/cava/themes/theme"

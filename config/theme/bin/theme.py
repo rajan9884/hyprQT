@@ -32,39 +32,6 @@ NAME = re.compile(r"^[A-Za-z0-9._-]+$")
 TOKEN = re.compile(r"\{\{\s*([A-Za-z0-9_]+)((?:\s*\|\s*[a-z0-9]+(?:=[0-9a-fA-Fx.]+)?)*)\s*\}\}")
 IMG_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"}
 
-# Opacity steps shared with hypr/scripts/opacity.sh (float -> 8-digit-hex alpha).
-# The rofi template hardcodes {{bg|alpha=70}} on the main `bg:` line; when
-# regenerating we substitute the live SUPER+O choice there only, so
-# wallpaper/theme changes don't reset menu opacity. `bg-alt` and friends
-# intentionally keep their own (transparent/solid) alphas.
-OPACITY_ALPHA = [(1.0, "FF"), (0.9, "E6"), (0.8, "CC"), (0.7, "B3"),
-                 (0.6, "99"), (0.5, "80"), (0.4, "66")]
-ROFI_BG_LINE = re.compile(
-    r"(^\s*bg:\s*\{\{\s*bg\s*\|\s*alpha\s*=\s*)([0-9a-fA-F]+)(\s*\}\}\s*;)",
-    re.MULTILINE,
-)
-
-
-def live_bg_alpha_hex():
-    """Current SUPER+O opacity as hex alpha (Theme.qml bgAlpha, else rules.lua)."""
-    try:
-        m = re.search(r"property\s+real\s+bgAlpha:\s*([0-9.]+)",
-                      (CFG / "quickshell" / "Theme.qml").read_text())
-        if m:
-            v = float(m.group(1))
-            return min(OPACITY_ALPHA, key=lambda t: abs(t[0] - v))[1]
-    except Exception:
-        pass
-    try:
-        m = re.search(r'opacity\s*=\s*"([0-9.]+)\s+override"',
-                      (CFG / "hypr" / "rules.lua").read_text())
-        if m:
-            v = float(m.group(1))
-            return min(OPACITY_ALPHA, key=lambda t: abs(t[0] - v))[1]
-    except Exception:
-        pass
-    return "B3"
-
 
 def die(msg):
     print(f"theme: {msg}", file=sys.stderr)
@@ -351,11 +318,6 @@ def apply_palette(pal):
         for name, t in targets.items():           # 1. render everything first
             src, dst = Path(t["input"]).expanduser(), Path(t["output"]).expanduser()
             text = src.read_text()
-            if name == "rofi":
-                # Keep the live SUPER+O menu opacity instead of the
-                # template's baked-in default (main `bg:` line only).
-                text = ROFI_BG_LINE.sub(
-                    lambda m: m.group(1) + live_bg_alpha_hex() + m.group(3), text)
             f = stage / name
             f.write_text(render(text, render_vars, name))
             staged.append((f, dst))

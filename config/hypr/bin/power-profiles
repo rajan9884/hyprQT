@@ -6,7 +6,7 @@
 #   power-profiles set <profile>        switch and remember for the current power source
 #   power-profiles autodetect           apply remembered/fallback profile for AC or battery
 #   power-profiles watch                autodetect once, then re-apply on AC plug/unplug
-#   power-profiles menu                 rofi switcher menu (power profile switcher)
+#   power-profiles menu                 QtQuick switcher menu (power profile switcher)
 
 STATE_DIR="${POWER_PROFILES_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/power-profiles}"
 
@@ -161,23 +161,8 @@ case "${1:-autodetect}" in
     cmd_watch
     ;;
   menu)
-    current=$(current_profile)
-    entries=()
-    while read -r p active; do
-      [[ -z $p && -z $active ]] && continue
-      if [[ $active == 1 ]]; then
-        entries+=("$p (current)")
-      else
-        entries+=("$p")
-      fi
-    done < <(list_profiles)
-    choice=$(printf '%s\n' "${entries[@]}" | rofi -dmenu -p "Power Profile")
-    [[ -z $choice ]] && exit 0
-    chosen=${choice%% *}
-    if [[ $chosen != "$current" ]]; then
-      if on_battery; then SAVE_KEY=battery; else SAVE_KEY=ac; fi
-      apply_profile "$chosen"
-    fi
+    # rofi removed — the switcher is quickshell's Settings POWER page.
+    qs ipc call settings page power
     ;;
   *)
     usage

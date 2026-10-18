@@ -10,12 +10,15 @@ into `~/.config`, so editing either path edits the same file.
 
 - **Hyprland in Lua** — keybinds, rules, and look live in `keybinds.lua`,
   `rules.lua`, `look.lua`, `monitors.lua` instead of a flat `hyprland.conf`.
-- **One shell, one bar** — Quickshell (`qs`) provides the bar, a fuzzy
-  launcher with inline `=expr` calc, network/bluetooth/audio/display
-  panels, notifications, OSDs (volume/brightness), power menu, to-do,
-  wheel launcher, and an in-app cheatsheet (`SUPER+K`).
+- **One shell, one bar** — Quickshell (`qs`) provides the bar (system tray,
+  caffeine/idle toggle, battery → power profiles), a fuzzy launcher with
+  inline `=expr` calc, network/bluetooth/audio/display panels, a tabbed
+  settings center (audio/display/network/power), notifications, OSDs
+  (volume/brightness), power menu, QT opacity menu, to-do, wheel launcher,
+  and an in-app cheatsheet (`SUPER+K`). No rofi — every former rofi menu
+  is now QT.
 - **Palette everywhere** — Matugen derives colors from the wallpaper;
-  `theme.py` renders `targets.toml` targets for foot, cava, rofi, starship,
+  `theme.py` renders `targets.toml` targets for foot, cava, starship,
   GTK 3/4, hyprlock, and the helium web-app theme, then reloads consumers
   live.
 - **Universal clipboard keys** — `SUPER+C/V/X/A` detect a terminal (foot)
@@ -30,8 +33,9 @@ into `~/.config`, so editing either path edits the same file.
 config/
   hypr/           Hyprland Lua config, hyprlock/hypridle, scripts/, bin/
                   (bin/ helpers are also linked into ~/.local/bin)
-  quickshell/     shell.qml + Bar/panels/OSDs; imgs/; plugins/ (clipboard,
-                  webapps); hyprquickpaper (wallpaper picker)
+  quickshell/     shell.qml + Bar/panels/OSDs/Settings/OpacityMenu; imgs/;
+                  scripts/ (opacity-apply); plugins/ (clipboard, webapps);
+                  hyprquickpaper (wallpaper picker)
   theme/          bin/theme.py, targets.toml, bin/foot-live.py, themes/*.toml
   foot/           foot.ini  (colors.ini is theme-generated)
   shell/          git-accounts.sh
@@ -41,7 +45,6 @@ config/
   fastfetch/      config.jsonc
   matugen/        config.toml + semantic.json template
   gtk-3.0/ gtk-4.0/   gtk.css; settings.ini is theme-managed
-  rofi/           config.rasi (colors.rasi theme-generated)
   .zshrc .zprofile .bashrc .gitconfig   linked into $HOME
   chromium-flags.conf
 install.sh        first-run setup (packages, symlinks, theme)
@@ -98,7 +101,7 @@ borders). Presets with `override = true` survive wallpaper changes.
 | Light / dark toggle | `SUPER+L` |
 | Wallpaper picker | `SUPER+CTRL+Space` |
 | Theme carousel | `SUPER+CTRL+SHIFT+Space` |
-| Random wallpaper | `SUPER+ALT+R` |
+| Random wallpaper | `SUPER+R` |
 
 ## Key bindings
 
@@ -109,7 +112,7 @@ borders). Presets with `override = true` survive wallpaper changes.
 |---|---|
 | `SUPER+Return` | Terminal (cwd-aware, foot) |
 | `SUPER+SHIFT+B` / `SUPER+SHIFT+ALT+B` | Browser / browser incognito |
-| `SUPER+D` / `SUPER+Space` | rofi app launcher |
+| `SUPER+D` / `SUPER+Space` | Quickshell app launcher |
 | `ALT+S` | Wheel launcher (Quickshell) |
 | `SUPER+SHIFT+N` | nvim |
 | `SUPER+E` / `SUPER+SHIFT+F` | Thunar (cwd) |
@@ -123,14 +126,16 @@ borders). Presets with `override = true` survive wallpaper changes.
 | `SUPER+TAB` / `+SHIFT` / `+CTRL` | Workspace cycle next/prev/origin |
 | `SUPER+G`, `SUPER+ALT+G`, `SUPER+ALT+<dirs>` | Window groups |
 | `SUPER+P`, `SUPER+ALT+J` | Pseudo-tiling / toggle split |
-| `SUPER+CTRL+T` / `SUPER+CTRL+W` | btop / nmtui |
+| `SUPER+CTRL+T` / `SUPER+CTRL+W` | btop / network panel |
+| `SUPER+CTRL+Q` | Launcher calc mode (`=expr`, Enter copies) |
+| `SUPER+CTRL+I` | Idle lock toggle (bar caffeine icon mirrors it) |
 | `SUPER+CTRL+N` / `B` / `A` / `D` | Network / Bluetooth / Audio / Display panel |
 | `SUPER+N`, `SUPER+<comma>` variants | Notification center / dismiss / DND |
 | `SUPER+C`,`V`,`X`,`A` | Universal clipboard (terminal auto-detect) |
 | `SUPER+ALT+T` | To-do list |
 | `SUPER+CTRL+Space` / `+SHIFT` | Wallpaper picker / theme carousel |
 | `Print`, `SUPER+SHIFT+Print`, `SUPER+SHIFT+S` | Region / full-screen / shot+annotate |
-| `SUPER+R` / `SUPER+ALT+R` | Region recorder / random wallpaper |
+| `SUPER+R` / `SUPER+ALT+R` | Random wallpaper / region recorder |
 | `XF86` keys | Volume, brightness, media, touchpad, HDR |
 
 Mouse: `SUPER+drag` move, `SUPER+right-click` resize,

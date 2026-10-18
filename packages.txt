@@ -10,11 +10,14 @@
 # --------------------------------------------------
 
 hyprland
+hypridle
 hyprlock
 hyprpolkitagent
+hyprsunset
 quickshell
 polkit
 qt6-wayland
+qt6ct
 
 # --------------------------------------------------
 # Desktop Portals / X11 Compatibility / User Dirs
@@ -141,12 +144,6 @@ fastfetch
 
 ttf-jetbrains-mono-nerd
 ttf-iosevka-nerd
-
-# --------------------------------------------------
-# App launcher (original rofi look)
-# --------------------------------------------------
-
-rofi
 
 # --------------------------------------------------
 # Scripting / Package / Application Utilities

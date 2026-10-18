@@ -33,6 +33,11 @@ hl.config({
             range = 4,
             render_power = 3,
         },
+        -- Focus clarity: dim + slightly fade inactive windows
+        dim_inactive = true,
+        dim_strength = 0.12,
+        dim_special = 0.0,
+        inactive_opacity = 0.93,
     },
     animations = {
         enabled = true,
@@ -41,9 +46,13 @@ hl.config({
 
 hl.curve("easeOut", { type = "bezier", points = { {0.05, 0.9}, {0.1, 1.0} } })
 
-hl.animation({ leaf = "windows",    enabled = true, speed = 5, bezier = "easeOut" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 5, bezier = "easeOut" })
-hl.animation({ leaf = "border",     enabled = true, speed = 5, bezier = "default" })
-hl.animation({ leaf = "fade",       enabled = true, speed = 4, bezier = "default" })
-hl.animation({ leaf = "workspaces", enabled = true, speed = 6, bezier = "default", style = "slidefadevert" }) -- styles: "slide", "slidefade", "slidevert", "slidefadevert"
+hl.animation({ leaf = "windows",       enabled = true, speed = 5, bezier = "easeOut" })
+hl.animation({ leaf = "windowsOut",    enabled = true, speed = 5, bezier = "easeOut" })
+hl.animation({ leaf = "windowsMove",   enabled = true, speed = 4, bezier = "easeOut" })
+hl.animation({ leaf = "fade",          enabled = true, speed = 4, bezier = "default" })
+hl.animation({ leaf = "fadeOut",       enabled = true, speed = 5, bezier = "default" })
+hl.animation({ leaf = "border",        enabled = true, speed = 5, bezier = "default" })
+hl.animation({ leaf = "workspaces",    enabled = true, speed = 6, bezier = "default", style = "slidefadevert" }) -- styles: "slide", "slidefade", "slidevert", "slidefadevert"
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3.5, bezier = "default", style = "slidevert" })
+hl.animation({ leaf = "layers",        enabled = true, speed = 4, bezier = "default", style = "slide" })
 

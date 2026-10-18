@@ -21,6 +21,8 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hypridle")
     hl.exec_cmd("sh -c 'B=$(cat \"${XDG_STATE_HOME:-$HOME/.local/state}/backlight\" 2>/dev/null); case \"$B\" in \"\"|*[!0-9]*) ;; *) brightnessctl -c backlight set \"$B\" >/dev/null 2>&1 || true;; esac'")
     hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme prefer-dark 2>/dev/null || true")
+    hl.exec_cmd("dbus-update-activation-environment --system --all 2>/dev/null || true")
+    hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent") -- auth dialogs (sudo / pkexec)
 
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("~/.config/hypr/scripts/wallpaper-restore.sh")
@@ -35,7 +37,19 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
 hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
 hl.env("QT_QPA_PLATFORM", "wayland")
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
 hl.env("MOZ_ENABLE_WAYLAND", "1")
+-- Pure Wayland session (no XWayland)
+hl.env("XDG_SESSION_TYPE", "wayland")
+hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
+hl.env("XDG_SESSION_DESKTOP", "Hyprland")
+hl.env("GDK_BACKEND", "wayland")
+hl.env("SDL_VIDEODRIVER", "wayland")
+hl.env("CLUTTER_BACKEND", "wayland")
+hl.env("ELECTRON_OZONE_PLATFORM_HINT", "wayland")
+hl.env("OZONE_PLATFORM", "wayland")
+-- Intel Iris Xe (13th Gen Raptor Lake, iHD driver)
+hl.env("LIBVA_DRIVER_NAME", "iHD")
 
 ---- INPUT ----
 
@@ -65,8 +79,26 @@ hl.config({
 -- MISC
 hl.config({
     misc = {
+        force_default_wallpaper = 0,
         disable_hyprland_logo = true,
         disable_splash_rendering = true,
+        mouse_move_enables_dpms = true,
+        key_press_enables_dpms = true,
+        animate_manual_resizes = false,
+        initial_workspace_tracking = false,
+    },
+    render = {
+        direct_scanout = true,
+        -- HDR / color management (HDR toggle: SUPER+CTRL+H)
+        cm_enabled = true,
+        cm_auto_hdr = 1, -- auto-switch to HDR for fullscreen HDR content
+    },
+    debug = {
+        disable_logs = true,
+        vfr = true,
+    },
+    xwayland = {
+        enabled = false,
     },
 })
 
