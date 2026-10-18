@@ -4,3 +4,8 @@ config/cava/themes/theme
 config/foot/colors.ini
 config/quickshell/state/
 __pycache__/
+
+# Additional generated files
+config/gtk-3.0/colors.css
+config/theme/bin/btop-theme-apply.sh
+config/theme/templates/btop-theme
