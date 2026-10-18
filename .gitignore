@@ -5,7 +5,7 @@ config/foot/colors.ini
 config/quickshell/state/
 __pycache__/
 
-# Additional generated files
+# Generated color files (theme.py renders these from themes/*.toml).
 config/gtk-3.0/colors.css
-config/theme/bin/btop-theme-apply.sh
-config/theme/templates/btop-theme
+config/gtk-4.0/colors.css
+config/hypr/hyprlock-colors.conf

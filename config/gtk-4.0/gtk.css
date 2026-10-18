@@ -22,3 +22,32 @@ treeview.view text {
 * {
     color: @gtk_fg;
 }
+
+/* Selection colors */
+.view:selected,
+.treeview:selected,
+.iconview:selected {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+/* For Thunar specific selections (if needed) */
+.thunar .view:selected,
+.thunar .treeview:selected,
+.thunar .iconview:selected,
+.thunar .sidebar row:selected,
+.placessidebar row:selected {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+/* Also for label inside selected items to ensure text color */
+.thunar .view:selected label,
+.thunar .treeview:selected label,
+.thunar .iconview:selected label,
+.thunar .sidebar row:selected label,
+.placessidebar row:selected label,
+.treeview row:selected label,
+.iconview:selected label {
+    color: @theme_selected_fg_color;
+}

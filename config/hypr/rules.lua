@@ -44,16 +44,26 @@ hl.window_rule({
     float = true,
 })
 
+-- File picker / upload dialogs (browser "Open Files" / "Save File").
+-- They request ~80% of screen height on their own, so cap the size here and
+-- keep them centred. Height stays above GTK's minimum (sidebar + entries) so
+-- nothing gets clipped.
 hl.window_rule({
     name = "float-open-file",
-    match = { title = "^(Open File)$" },
+    match = { title = "^(Open|Save) Files?$" },
     float = true,
+    center = true,
+    size = { 760, 580 },
 })
 
+-- Same dialog served by xdg-desktop-portal-gtk: its title follows the request
+-- ("Upload", "Select a File", ...), so match the class instead.
 hl.window_rule({
-    name = "float-save-file",
-    match = { title = "^(Save File)$" },
+    name = "float-portal-file-chooser",
+    match = { class = "^(xdg-desktop-portal-gtk)$" },
     float = true,
+    center = true,
+    size = { 760, 580 },
 })
 
 -- ── Ported from old-arch window-rules.lua ──

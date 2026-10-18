@@ -1,0 +1,81 @@
+#Bashtop Adwaita Dark theme
+#by k0tran
+
+# Main background, empty for terminal default, need to be empty if you want transparent background
+theme[main_bg]="{{bg}}"
+
+# Main text color
+theme[main_fg]="{{fg}}"
+
+# Title color for boxes
+theme[title]="{{fg}}"
+
+# Highlight color for keyboard shortcuts
+theme[hi_fg]="{{accent}}"
+
+# Background color of selected item in processes box
+theme[selected_bg]="{{highlight}}" 
+
+# Foreground color of selected item in processes box
+theme[selected_fg]="{{fg}}"
+
+# Color of inactive/disabled text
+theme[inactive_fg]="{{fg_dim}}"
+
+# Misc colors for processes box including mini cpu graphs, details memory graph and details status text
+theme[proc_misc]="{{fg_dim}}"
+
+# Cpu box outline color
+theme[cpu_box]="{{fg_dim}}"
+
+# Memory/disks box outline color
+theme[mem_box]="{{fg_dim}}"
+
+# Net up/down box outline color
+theme[net_box]="{{fg_dim}}"
+
+# Processes box outline color
+theme[proc_box]="{{fg_dim}}"
+
+# Box divider line and small boxes line color
+theme[div_line]="{{fg_dim}}"
+
+# Temperature graph colors
+theme[temp_start]="{{accent}}"
+theme[temp_mid]="{{highlight}}"
+theme[temp_end]="{{danger}}"
+
+# CPU graph colors
+theme[cpu_start]="{{accent}}"
+theme[cpu_mid]="{{highlight}}"
+theme[cpu_end]="{{danger}}"
+
+# Mem/Disk free meter
+theme[free_start]="{{accent}}"
+theme[free_mid]="{{highlight}}"
+theme[free_end]="{{danger}}"
+
+# Mem/Disk cached meter
+theme[cached_start]="{{accent}}"
+theme[cached_mid]="{{highlight}}"
+theme[cached_end]="{{danger}}"
+
+# Mem/Disk available meter
+theme[available_start]="{{accent}}"
+theme[available_mid]="{{highlight}}"
+theme[available_end]="{{danger}}"
+
+# Mem/Disk used meter
+theme[used_start]="{{accent}}"
+theme[used_mid]="{{highlight}}"
+theme[used_end]="{{danger}}"
+
+# Download graph colors
+theme[download_start]="{{accent}}"
+theme[download_mid]="{{highlight}}"
+theme[download_end]="{{danger}}"
+
+# Upload graph colors
+theme[upload_start]="{{accent}}"
+theme[upload_mid]="{{highlight}}"
+theme[upload_end]="{{danger}}"

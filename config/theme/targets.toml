@@ -27,3 +27,8 @@ output = "~/.config/starship.toml"
 [helium]
 input  = "~/.config/theme/templates/helium-theme.json"
 output = "~/.config/helium-theme/manifest.json"
+
+[btop-theme]
+input  = "~/.config/theme/templates/btop-theme"
+output = "~/.config/btop/themes/current.theme"
+reload = ["~/hyprQT/config/theme/bin/btop-theme-apply.sh"]
