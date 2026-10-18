@@ -50,6 +50,10 @@ hl.env("ELECTRON_OZONE_PLATFORM_HINT", "wayland")
 hl.env("OZONE_PLATFORM", "wayland")
 -- Intel Iris Xe (13th Gen Raptor Lake, iHD driver)
 hl.env("LIBVA_DRIVER_NAME", "iHD")
+-- Disable AT-SPI accessibility bridge (saves RAM; no screen readers in use)
+hl.env("GTK_A11Y", "none")
+hl.env("NO_AT_BRIDGE", "1")
+hl.env("QT_ACCESSIBILITY", "0")
 
 ---- INPUT ----
 
