@@ -58,6 +58,11 @@ Scope {
         function calc(): void { root.openCalc() }
     }
 
+    function iconPath(icon) {
+        if (!icon || icon === "") return ""
+        return Quickshell.iconPath(icon, true)
+    }
+
     // Fuzzy score: subsequence match, bonuses for prefix / consecutive / word-boundary
     function fuzzyScore(name, q) {
         name = name.toLowerCase(); q = q.toLowerCase()
@@ -288,7 +293,8 @@ Scope {
                                     width: 28
                                     height: 28
                                     sourceSize: Qt.size(28, 28)
-                                    source: (modelData.icon && modelData.icon !== "") ? Quickshell.iconPath(modelData.icon, true) : ""
+                                    asynchronous: true
+                                    source: (modelData.icon && modelData.icon !== "") ? root.iconPath(modelData.icon) : ""
                                     visible: status === Image.Ready
                                 }
                                 Rectangle {
@@ -297,7 +303,7 @@ Scope {
                                     height: 28
                                     radius: 6
                                     color: Theme.alpha(Theme.accent, 0.12)
-                                    visible: !parent.children[0].visible
+                                    visible: parent.children[0].status !== Image.Ready
                                     Text {
                                         anchors.centerIn: parent
                                         text: modelData.name ? modelData.name[0].toUpperCase() : "?"

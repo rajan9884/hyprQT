@@ -5,8 +5,6 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 
-// Emoji picker with keyword search + arrow navigation.
-// IPC: qs ipc call emoji toggle|show|hide
 Scope {
     id: root
     property bool showing: false
@@ -84,17 +82,45 @@ Scope {
         { e: "💀", n: "skull dead" },
         { e: "🐱", n: "cat kitty meow" },
         { e: "🐶", n: "dog puppy woof" },
-        { e: "🦀", n: "crab ferris rust" }
+        { e: "🦀", n: "crab ferris rust" },
+        { e: "🤡", n: "clown joker circus" },
+        { e: "🤠", n: "cowboy hat western" },
+        { e: "🤯", n: "mind blown shock" },
+        { e: "😈", n: "devil horns smile" },
+        { e: "🤥", n: "lying nose pinocchio" },
+        { e: "🤫", n: "shush quiet secret" },
+        { e: "🥰", n: "love face hearts smile" },
+        { e: "😋", n: "yummy tongue food" },
+        { e: "😜", n: "winky tongue silly" },
+        { e: "🤪", n: "crazy silly zany" },
+        { e: "😛", n: "tongue out play" },
+        { e: "😝", n: "squint tongue silly" },
+        { e: "🤓", n: "nerd glasses smart" },
+        { e: "🧐", n: "monocle inspect" },
+        { e: "🤨", n: "raised eyebrow doubt" },
+        { e: "😒", n: "unamused annoyed" },
+        { e: "😞", n: "sad disappointed" },
+        { e: "😔", n: "sad pensive" },
+        { e: "😟", n: "worried concerned" },
+        { e: "😕", n: "confused puzzled" },
+        { e: "😫", n: "tired exhausted" },
+        { e: "😩", n: "weary tired" },
+        { e: "😤", n: "huff steam angry" },
+        { e: "😠", n: "mad angry" },
+        { e: "👿", n: "angry devil" },
+        { e: "👹", n: "ogre monster" },
+        { e: "👺", n: "goblin" },
+        { e: "💩", n: "poop pile" }
     ]
     property var filtered: {
         var q = root.query.toLowerCase().trim()
-        if (q === "") return root.allEmoji.slice(0, 45)
+        if (q === "") return root.allEmoji.slice(0, 90)
         var out = []
         for (var i = 0; i < root.allEmoji.length; i++) {
             var item = root.allEmoji[i]
             if (item.n.indexOf(q) >= 0 || item.e.indexOf(root.query) >= 0) out.push(item)
         }
-        return out.slice(0, 45)
+        return out.slice(0, 90)
     }
 
     onShowingChanged: { if (showing) { unmountTimer.stop(); mounted = true; root.query = ""; root.selected = 0 } else unmountTimer.restart() }
@@ -133,20 +159,18 @@ Scope {
             WlrLayershell.namespace: "emoji"
             WlrLayershell.keyboardFocus: root.showing ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
             mask: Region { item: root.showing ? card : null }
-            // Re-focus search on EVERY open (Component.onCompleted runs once only).
-            // Without this the user must click the text area first.
             Timer {
                 id: focusTimer
                 interval: 80
                 repeat: false
-                onTriggered: { searchField.text = ""; searchField.forceActiveFocus() }
+                onTriggered: { searchField.text = root.query; searchField.forceActiveFocus() }
             }
             Connections {
                 target: root
                 function onShowingChanged() { if (root.showing) focusTimer.restart() }
             }
             Component.onCompleted: { if (root.showing) focusTimer.restart() }
-            MouseArea { anchors.fill: parent; onClicked: root.closeMenu() }
+            MouseArea { anchors.fill: parent; propagateComposedEvents: true; onClicked: root.closeMenu() }
             Rectangle {
                 id: card
                 width: Math.min(520, parent.width - 80)
@@ -158,8 +182,6 @@ Scope {
                 border.color: Theme.accent
                 focus: true
                 Keys.onEscapePressed: root.closeMenu()
-                // Fallback: if focus lands on card instead of search, arrows still work
-                // and typing jumps into search.
                 Keys.onPressed: function(event) {
                     var cols = 9
                     var n = root.filtered.length
@@ -168,7 +190,7 @@ Scope {
                     else if (event.key === Qt.Key_Left) { root.selected = (root.selected - 1 + n) % n; grid.positionViewAtIndex(root.selected, GridView.Visible); searchField.forceActiveFocus(); event.accepted = true }
                     else if (event.key === Qt.Key_Down) { root.selected = (root.selected + cols) % n; grid.positionViewAtIndex(root.selected, GridView.Visible); searchField.forceActiveFocus(); event.accepted = true }
                     else if (event.key === Qt.Key_Up) { root.selected = (root.selected - cols + n) % n; grid.positionViewAtIndex(root.selected, GridView.Visible); searchField.forceActiveFocus(); event.accepted = true }
-                    else if (event.key >= Qt.Key_A && event.key <= Qt.Key_Z) { searchField.forceActiveFocus(); /* let search handle it */ }
+                    else if (event.key >= Qt.Key_A && event.key <= Qt.Key_Z) { searchField.forceActiveFocus(); }
                 }
                 Column {
                     anchors.fill: parent
@@ -186,8 +208,6 @@ Scope {
                             font.family: Theme.fontFamily
                             font.pixelSize: 15
                             focus: true
-                            // NOTE: no `text: root.query` binding — that breaks typing
-                            // (binding loop resets cursor). We push text -> query only.
                             onTextChanged: { root.query = text; root.selected = 0 }
                             Keys.onPressed: function(event) {
                                 var cols = 9

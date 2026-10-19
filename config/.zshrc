@@ -10,8 +10,12 @@ if command -v starship >/dev/null 2>&1; then eval "$(starship init zsh)"; fi
 [[ "$PWD" == "/" ]] && cd "$HOME" >/dev/null 2>&1 || true
 
 # ── Aliases ──
-alias ..="cd ../"
-alias ff="fzf --preview 'bat --color=always {}'"
+alias ff='nvim $(fzf -m --preview="bat --color=always {}")'
+alias ffd='rm -rf $(fzf -m --preview="bat --color=always {}")'
+alias zed='zeditor'
+alias cd='z'
+
+
 
 # Monochrome eza
 export EZA_COLORS="uu=bright-black:gu=bright-black:da=bright-black:ur=white:uw=bright-black:ux=white:ue=bright-black:gr=bright-black:gw=bright-black:gx=white:tr=bright-black:fi=white:di=bright-white:ln=bright-black:pi=bright-black:so=bright-black:bd=bright-black:cd=bright-black:or=bright-black:mi=bright-black:ex=white"
@@ -20,6 +24,11 @@ alias ls='eza --icons=auto'
 alias ll='eza -lah --icons=auto --git'
 alias la='eza -a --icons=auto'
 alias lt='eza --tree --icons=auto'
+
+# Directories
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
 
 # Dual-GitHub helpers: git-work / git-personal / git-whoami
 [ -f "$HOME/.config/shell/git-accounts.sh" ] && source "$HOME/.config/shell/git-accounts.sh"
@@ -106,3 +115,6 @@ export PATH=/home/rj9884/.opencode/bin:$PATH
 export PATH="/home/rj9884/.local/bin:$PATH"
 # theme controller
 theme() { python3 "$HOME/.config/theme/bin/theme.py" "$@"; }
+
+# kilo
+export PATH=/home/rj9884/.kilo/bin:$PATH
