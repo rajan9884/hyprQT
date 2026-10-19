@@ -180,7 +180,7 @@ Scope {
                         height: width
                         radius: width / 2
                         anchors.centerIn: parent
-                        color: "transparent"
+                        color: Theme.bg
                         border.width: 1
                         border.color: root.selected >= 0 ? Theme.accent : Theme.alpha(Theme.text, 0.5)
                         Behavior on border.color { ColorAnimation { duration: 120 } }
@@ -223,7 +223,7 @@ Scope {
                                 layer.samples: 4
 
                                 ShapePath {
-                                    fillColor: "transparent"
+                                    fillColor: Theme.bg
                                     strokeWidth: 1.5
                                     strokeColor: seg.focused ? Theme.accent : Theme.alpha(Theme.text, 0.5)
                                     joinStyle: ShapePath.RoundJoin
@@ -250,7 +250,7 @@ Scope {
                                 }
 
                                 ShapePath {
-                                    fillColor: "transparent"
+                                    fillColor: Theme.bg
                                     strokeWidth: 1.5
                                     strokeColor: seg.focused ? Theme.accent : Theme.alpha(Theme.text, 0.5)
 

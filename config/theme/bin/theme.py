@@ -330,8 +330,18 @@ def apply_palette(pal):
             shutil.copyfile(f, tmp)
             os.replace(tmp, dst)
         atomic_write(PALETTE, json.dumps(pal, indent=2))
+        # Neovim sync
+        try:
+            nvim_path = Path.home() / ".config/nvim/lua/matugen-colors.lua"
+            nvim_path.parent.mkdir(parents=True, exist_ok=True)
+            nvim_path.write_text(f'local M={{}}\nM.colors={{bg="{pal.get("bg","#181825")}",fg="{pal.get("fg","#cdd6f4")}",primary="{pal.get("primary","#cba6f7")}",secondary="{pal.get("secondary","#f9e2af")}",tertiary="{pal.get("tertiary","#a6e3a1")}",error="{pal.get("error","#f38ba8")}"}}\nreturn M\n')
+        except Exception as e:
+            warn(f"nvim sync failed: {e}")
     finally:
-        shutil.rmtree(stage, ignore_errors=True)
+        try:
+            shutil.rmtree(stage, ignore_errors=True)
+        except Exception:
+            pass
     for h in hooks:                                # 3. reload consumers last
         try:
             r = subprocess.run(h, stdin=subprocess.DEVNULL, capture_output=True, timeout=10)
