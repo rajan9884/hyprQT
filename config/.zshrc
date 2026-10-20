@@ -14,8 +14,8 @@ alias ff='nvim $(fzf -m --preview="bat --color=always {}")'
 alias ffd='rm -rf $(fzf -m --preview="bat --color=always {}")'
 alias zed='zeditor'
 alias cd='z'
-
-
+alias osd='bash delete-opencode-sessions.sh'
+alias pi-session-del='bash delete-pi-sessions.sh'
 
 # Monochrome eza
 export EZA_COLORS="uu=bright-black:gu=bright-black:da=bright-black:ur=white:uw=bright-black:ux=white:ue=bright-black:gr=bright-black:gw=bright-black:gx=white:tr=bright-black:fi=white:di=bright-white:ln=bright-black:pi=bright-black:so=bright-black:bd=bright-black:cd=bright-black:or=bright-black:mi=bright-black:ex=white"

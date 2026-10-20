@@ -1288,6 +1288,11 @@ Scope {
 
                             Rectangle {
                                 id: calBox
+                                focus: true
+                                Keys.onEscapePressed: {
+                                    clockPanel.calOpen = false;
+                                    event.accepted = true;
+                                }
                                 anchors.fill: parent
                                 radius: cfg.calRadius
                                 color: root.bgColor
