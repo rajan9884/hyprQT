@@ -8,7 +8,7 @@
 -- window at full opacity — that read as "Thunar has fixed opacity").
 hl.window_rule({
     match = { class = ".*" },
-    opacity = "1.0 1.0 override",
+    opacity = "0.92 0.92 override",
 })
 hl.window_rule({
     match = { class = ".*", fullscreen = true },

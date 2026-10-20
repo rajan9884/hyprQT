@@ -19,7 +19,7 @@
 #   4) hyprctl reload for the rules change
 #
 set -u
-PCT="${1:-100}"
+PCT="${1:-92}"
 case "$PCT" in ''|*[!0-9]*) echo "opacity-apply: bad percent '$PCT'" >&2; exit 1 ;; esac
 [ "$PCT" -lt 40 ] && PCT=40
 [ "$PCT" -gt 100 ] && PCT=100

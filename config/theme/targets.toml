@@ -28,6 +28,10 @@ output = "~/.config/starship.toml"
 input  = "~/.config/theme/templates/helium-theme.json"
 output = "~/.config/helium-theme/manifest.json"
 
+[nvim]
+input  = "~/.config/theme/templates/nvim-colors.lua"
+output = "~/.config/nvim/lua/matugen-colors.lua"
+
 [btop-theme]
 input  = "~/.config/theme/templates/btop-theme"
 output = "~/.config/btop/themes/current.theme"
