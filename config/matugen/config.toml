@@ -1,5 +1,9 @@
 [config]
 
+[templates.nvim]
+input_path  = '~/.config/matugen/templates/nvim.lua'
+output_path = '~/.config/nvim/lua/matugen-colors.lua'
+
 [templates.semantic]
 input_path  = '~/.config/matugen/templates/semantic.json'
 output_path = '~/.cache/theme/matugen/semantic.json'
